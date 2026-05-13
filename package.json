@@ -2,25 +2,52 @@
   "name": "cloud-frontend",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.18.3",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "pnpm --filter partner dev",
+    "dev:partner": "pnpm --filter partner dev",
+    "dev:merchant": "pnpm --filter merchant dev",
+    "dev:admin": "pnpm --filter admin dev",
+    "build": "pnpm -r --filter './apps/*' build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "pnpm --filter @cloud/db prisma:generate",
+    "db:migrate": "pnpm --filter @cloud/db prisma:migrate",
+    "db:seed": "pnpm --filter @cloud/db prisma:seed"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@prisma/client": "^6.19.0",
+    "better-auth": "^1.4.3",
+    "bcryptjs": "^3.0.3",
+    "ioredis": "^5.8.2",
+    "lucide-react": "^0.552.0",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.66.1",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jsdom": "^27.2.0",
+    "prettier": "^3.6.2",
+    "prisma": "^6.19.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.0.8"
   }
 }

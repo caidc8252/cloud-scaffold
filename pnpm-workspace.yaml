@@ -1,3 +1,19 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+catalog:
+  "@prisma/client": "^6.19.0"
+  "bcryptjs": "^3.0.3"
+  "better-auth": "^1.4.3"
+  "ioredis": "^5.8.2"
+  "lucide-react": "^0.552.0"
+  "prisma": "^6.19.0"
+  "react": "19.2.4"
+  "react-dom": "19.2.4"
+  "zod": "^4.4.3"
+  "zustand": "^5.0.8"
+
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

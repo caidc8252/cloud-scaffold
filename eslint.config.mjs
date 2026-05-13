@@ -5,13 +5,22 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+  {
+    settings: {
+      next: {
+        rootDir: ["apps/partner/", "apps/merchant/", "apps/admin/"],
+      },
+    },
+  },
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
+    "apps/*/.next/**",
     "out/**",
     "build/**",
+    "coverage/**",
+    "packages/db/src/generated/**",
     "next-env.d.ts",
+    "apps/*/next-env.d.ts",
   ]),
 ]);
 

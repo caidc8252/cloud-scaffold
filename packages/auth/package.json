@@ -1,0 +1,17 @@
+{
+  "name": "@cloud/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@better-auth/prisma-adapter": "^1.4.3",
+    "@cloud/cache": "workspace:*",
+    "@cloud/config": "workspace:*",
+    "@cloud/db": "workspace:*",
+    "@cloud/security": "workspace:*",
+    "better-auth": "catalog:"
+  }
+}
