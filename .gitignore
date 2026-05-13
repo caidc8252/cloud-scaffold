@@ -46,3 +46,10 @@ apps/*/dev.log
 next-env.d.ts
 
 .pnpm-store
+
+# AI local skills / agent artifacts
+.agents/skills/
+.claude/skills/
+.codex/skills/
+.codex/plugins/cache/
+.codex/codex_with_cc

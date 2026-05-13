@@ -1,3 +1,5 @@
+'use client'
+
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
@@ -20,7 +22,9 @@ export const Layout: React.FC<{
         </header>
       )}
       <main className="flex-1 overflow-y-auto bg-surface-1">
-        {children}
+        <div className="mx-auto w-full max-w-[1200px]">
+          {children}
+        </div>
       </main>
     </div>
   </div>

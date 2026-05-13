@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tokens · TOMS Dark Mode</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* Surface ladder */
+    .ladder { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .lad {
+      height: 88px; border-radius: 8px;
+      border: 1px solid var(--color-border-subtle);
+      padding: 12px 14px;
+      display:flex; flex-direction:column; justify-content:space-between;
+    }
+    .lad__role { font-size: 12px; color: var(--color-text-primary); font-weight: 500; }
+    .lad__var  { font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-tertiary); letter-spacing: 0.04em; }
+    .lad__val  { font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); }
+
+    /* Text ramp */
+    .text-ramp { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .text-ramp__cell { background: var(--color-bg-2); border: 1px solid var(--color-border-subtle); border-radius: 8px; padding: 18px; }
+    .text-ramp__sample { font-size: 22px; font-weight: 500; letter-spacing: -0.015em; margin-bottom: 8px; }
+    .text-ramp__name { font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-tertiary); }
+    .text-ramp__val  { font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
+
+    /* Scale strip */
+    .scale {
+      display:grid; grid-template-columns: repeat(10, 1fr); gap: 4px;
+    }
+    .scale .sw {
+      height: 56px; border-radius: 6px; border: 1px solid var(--color-border-subtle);
+      display:flex; align-items:flex-end; padding: 6px 8px;
+      font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary);
+    }
+
+    /* Semantic */
+    .semantic { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .sem {
+      background: var(--color-bg-2); border-radius: 10px; border: 1px solid var(--color-border-subtle);
+      padding: 16px; display:flex; flex-direction:column; gap: 12px;
+    }
+    .sem__head { display:flex; align-items:center; justify-content:space-between; }
+    .sem__title { font-size: 13.5px; font-weight: 600; }
+    .sem__pill { font-family: var(--font-mono); font-size: 10.5px; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.04em; }
+    .sem--success .sem__pill { background: var(--color-success-50); color: var(--color-success-500); }
+    .sem--warning .sem__pill { background: var(--color-warning-50); color: var(--color-warning-500); }
+    .sem--error   .sem__pill { background: var(--color-error-50);   color: var(--color-error-500); }
+    .sem--info    .sem__pill { background: var(--color-info-50);    color: var(--color-info-500); }
+    .sem__strip { height: 4px; border-radius: 2px; }
+    .sem--success .sem__strip { background: var(--color-success-500); }
+    .sem--warning .sem__strip { background: var(--color-warning-500); }
+    .sem--error   .sem__strip { background: var(--color-error-500); }
+    .sem--info    .sem__strip { background: var(--color-info-500); }
+    .sem__rows { display:flex; flex-direction:column; gap: 4px; }
+    .sem__row { display:flex; justify-content:space-between; font-family: var(--font-mono); font-size: 10.5px; }
+    .sem__row span:first-child { color: var(--color-text-tertiary); }
+    .sem__row span:last-child  { color: var(--color-text-secondary); }
+
+    /* Comparison table */
+    .ct {
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      background: var(--color-bg-2); border: 1px solid var(--color-border-subtle); border-radius: 10px; overflow: hidden;
+    }
+    .ct th, .ct td { padding: 10px 14px; font-size: 12.5px; text-align: left; }
+    .ct th {
+      font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--color-text-tertiary);
+      background: var(--color-bg-3); border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .ct td { border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-secondary); }
+    .ct tr:last-child td { border-bottom: 0; }
+    .ct td.k { font-family: var(--font-mono); color: var(--color-text-primary); font-size: 12px; }
+    .ct td.v { font-family: var(--font-mono); font-size: 11.5px; }
+    .ct .sw {
+      display:inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -3px; margin-right: 8px;
+      border: 1px solid var(--color-border-subtle);
+    }
+
+    /* Chart palette */
+    .charts { display:grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .ch { padding: 12px; border-radius: 8px; border: 1px solid var(--color-border-subtle); background: var(--color-bg-2); display:flex; flex-direction:column; gap: 8px; }
+    .ch__sw { height: 60px; border-radius: 4px; }
+    .ch__name { font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-tertiary); letter-spacing: 0.04em; }
+    .ch__val { font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); }
+
+    /* Naming convention table */
+    .nc { background: var(--color-bg-2); border: 1px solid var(--color-border-subtle); border-radius: 10px; padding: 4px; }
+    .nc-row { display: grid; grid-template-columns: 220px 1fr 1fr; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--color-border-subtle); align-items: center; }
+    .nc-row:last-child { border-bottom: 0; }
+    .nc-row__layer { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-accent-500); }
+    .nc-row__from { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-secondary); }
+    .nc-row__to   { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-primary); }
+
+    /* Focus / state row */
+    .state-row { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .state {
+      background: var(--color-bg-2); border: 1px solid var(--color-border-subtle); border-radius: 10px;
+      padding: 18px; display:flex; flex-direction:column; gap: 10px;
+    }
+    .state__title { font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; }
+    .state__demo { height: 72px; border-radius: 6px; display:grid; place-items:center; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div id="app" class="app"></div>
+
+  <template id="page-content-tpl">
+    <main class="page page--wide" id="page-content">
+      <p class="eyebrow">02 · Tokens</p>
+      <h1 class="page__title">Dark Mode Tokens</h1>
+      <p class="page__lede">
+        Every value below ships in <code class="code" style="background:var(--color-bg-3); padding:1px 6px; border-radius:3px;">tokens/tokens.css</code> under
+        <code class="code" style="background:var(--color-bg-3); padding:1px 6px; border-radius:3px;">[data-theme="dark"]</code>.
+        The whole system is one OKLCH ramp &mdash; lightness moves, hue stays calm, chroma stays low.
+      </p>
+
+      <!-- SURFACES -->
+      <section class="section">
+        <h2 class="sec">Surfaces</h2>
+        <p class="sub-lede">Three canvas tokens plus interaction states. Card is brighter than canvas; sunken is darker. Overlay is global modal scrim.</p>
+        <div class="ladder">
+          <div class="lad" style="background: var(--color-bg-3);">
+            <div>
+              <div class="lad__role">Sunken</div>
+              <div class="lad__var">--color-bg-3</div>
+            </div>
+            <div class="lad__val">oklch(11% .003 260)</div>
+          </div>
+          <div class="lad" style="background: var(--color-bg-1);">
+            <div>
+              <div class="lad__role">Canvas</div>
+              <div class="lad__var">--color-bg-1</div>
+            </div>
+            <div class="lad__val">oklch(14% .003 260)</div>
+          </div>
+          <div class="lad" style="background: var(--color-bg-2);">
+            <div>
+              <div class="lad__role">Card</div>
+              <div class="lad__var">--color-bg-2</div>
+            </div>
+            <div class="lad__val">oklch(17% .004 260)</div>
+          </div>
+          <div class="lad" style="background: var(--color-bg-hover);">
+            <div>
+              <div class="lad__role">Hover</div>
+              <div class="lad__var">--color-bg-hover</div>
+            </div>
+            <div class="lad__val">oklch(22% .005 260)</div>
+          </div>
+          <div class="lad" style="background: var(--color-bg-active);">
+            <div>
+              <div class="lad__role">Active</div>
+              <div class="lad__var">--color-bg-active</div>
+            </div>
+            <div class="lad__val">oklch(26% .006 260)</div>
+          </div>
+          <div class="lad" style="background: var(--color-bg-overlay);">
+            <div>
+              <div class="lad__role" style="color: var(--color-text-inverse);">Overlay</div>
+              <div class="lad__var">--color-bg-overlay</div>
+            </div>
+            <div class="lad__val">oklch(0% 0 0 / .65)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TEXT -->
+      <section class="section">
+        <h2 class="sec">Text</h2>
+        <p class="sub-lede">Primary never reaches pure white. Four levels of contrast across one cool hue.</p>
+        <div class="text-ramp">
+          <div class="text-ramp__cell">
+            <div class="text-ramp__sample" style="color: var(--color-text-primary);">Primary</div>
+            <div class="text-ramp__name">--color-text-primary</div>
+            <div class="text-ramp__val">oklch(94% .003 260)</div>
+          </div>
+          <div class="text-ramp__cell">
+            <div class="text-ramp__sample" style="color: var(--color-text-secondary);">Secondary</div>
+            <div class="text-ramp__name">--color-text-secondary</div>
+            <div class="text-ramp__val">oklch(66% .005 260)</div>
+          </div>
+          <div class="text-ramp__cell">
+            <div class="text-ramp__sample" style="color: var(--color-text-tertiary);">Tertiary</div>
+            <div class="text-ramp__name">--color-text-tertiary</div>
+            <div class="text-ramp__val">oklch(50% .005 260)</div>
+          </div>
+          <div class="text-ramp__cell">
+            <div class="text-ramp__sample" style="color: var(--color-text-disabled);">Disabled</div>
+            <div class="text-ramp__name">--color-text-disabled</div>
+            <div class="text-ramp__val">oklch(38% .005 260)</div>
+          </div>
+          <div class="text-ramp__cell" style="background: var(--color-primary-700);">
+            <div class="text-ramp__sample" style="color: var(--color-text-on-primary);">On primary</div>
+            <div class="text-ramp__name" style="color: oklch(28% .005 260);">--color-text-on-primary</div>
+            <div class="text-ramp__val" style="color: oklch(28% .005 260);">oklch(14% .003 260)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BRAND -->
+      <section class="section">
+        <h2 class="sec">Brand & accent</h2>
+        <p class="sub-lede">
+          Primary CTA in dark inverts to a near-white button (Linear pattern). The brand <em>accent</em> &mdash; used for focus rings, highlights, links &mdash; is desaturated indigo at <span class="mono">oklch(70% .13 264)</span>.
+        </p>
+        <h3 class="sub" style="margin: 22px 0 10px; font-size: 13px;">Primary scale &mdash; inverted (light on dark)</h3>
+        <div class="scale">
+          <div class="sw" style="background: var(--color-primary-50);">  50</div>
+          <div class="sw" style="background: var(--color-primary-100);">100</div>
+          <div class="sw" style="background: var(--color-primary-200);">200</div>
+          <div class="sw" style="background: var(--color-primary-300);">300</div>
+          <div class="sw" style="background: var(--color-primary-400);">400</div>
+          <div class="sw" style="background: var(--color-primary-500);">500</div>
+          <div class="sw" style="background: var(--color-primary-600); color: oklch(20% 0 0);">600</div>
+          <div class="sw" style="background: var(--color-primary-700); color: oklch(20% 0 0);">700</div>
+          <div class="sw" style="background: var(--color-primary-800); color: oklch(20% 0 0);">800</div>
+          <div class="sw" style="background: var(--color-primary-900);">900</div>
+        </div>
+        <h3 class="sub" style="margin: 22px 0 10px; font-size: 13px;">Accent scale &mdash; muted indigo</h3>
+        <div class="scale" style="grid-template-columns: repeat(6, 1fr);">
+          <div class="sw" style="background: var(--color-accent-50);">  50</div>
+          <div class="sw" style="background: var(--color-accent-100);">100</div>
+          <div class="sw" style="background: var(--color-accent-200);">200</div>
+          <div class="sw" style="background: var(--color-accent-500);">500</div>
+          <div class="sw" style="background: var(--color-accent-600);">600</div>
+          <div class="sw" style="background: var(--color-accent-700); color: oklch(20% 0 0);">700</div>
+        </div>
+      </section>
+
+      <!-- SEMANTIC -->
+      <section class="section">
+        <h2 class="sec">Semantic</h2>
+        <p class="sub-lede">Calm in dark &mdash; lifted lightness, halved chroma. Success / warning / error / info each get one fill, one tint, and one strong text colour.</p>
+        <div class="semantic">
+          <div class="sem sem--success">
+            <div class="sem__head"><div class="sem__title">Success</div><div class="sem__pill">paid · live</div></div>
+            <div class="sem__strip"></div>
+            <div class="sem__rows">
+              <div class="sem__row"><span>500</span><span>oklch(68% .13 152)</span></div>
+              <div class="sem__row"><span>50 (bg)</span><span>oklch(24% .05 152)</span></div>
+              <div class="sem__row"><span>700 (text)</span><span>oklch(78% .11 152)</span></div>
+            </div>
+          </div>
+          <div class="sem sem--warning">
+            <div class="sem__head"><div class="sem__title">Warning</div><div class="sem__pill">retry · degraded</div></div>
+            <div class="sem__strip"></div>
+            <div class="sem__rows">
+              <div class="sem__row"><span>500</span><span>oklch(76% .13 70)</span></div>
+              <div class="sem__row"><span>50 (bg)</span><span>oklch(26% .06 70)</span></div>
+              <div class="sem__row"><span>700 (text)</span><span>oklch(84% .11 70)</span></div>
+            </div>
+          </div>
+          <div class="sem sem--error">
+            <div class="sem__head"><div class="sem__title">Error</div><div class="sem__pill">failed · refund</div></div>
+            <div class="sem__strip"></div>
+            <div class="sem__rows">
+              <div class="sem__row"><span>500</span><span>oklch(68% .16 25)</span></div>
+              <div class="sem__row"><span>50 (bg)</span><span>oklch(24% .07 25)</span></div>
+              <div class="sem__row"><span>700 (text)</span><span>oklch(78% .14 25)</span></div>
+            </div>
+          </div>
+          <div class="sem sem--info">
+            <div class="sem__head"><div class="sem__title">Info</div><div class="sem__pill">pending · note</div></div>
+            <div class="sem__strip"></div>
+            <div class="sem__rows">
+              <div class="sem__row"><span>500</span><span>oklch(70% .12 235)</span></div>
+              <div class="sem__row"><span>50 (bg)</span><span>oklch(24% .05 235)</span></div>
+              <div class="sem__row"><span>700 (text)</span><span>oklch(80% .10 235)</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STATES -->
+      <section class="section">
+        <h2 class="sec">Interaction states</h2>
+        <p class="sub-lede">Reusable across every component. Hover lifts ~6% lightness; active +4%; focus is the loudest signal in the system.</p>
+        <div class="state-row">
+          <div class="state">
+            <div class="state__title">Rest</div>
+            <div class="state__demo" style="background: var(--color-bg-2); border: 1px solid var(--color-border-default);">bg-2</div>
+            <div class="mono">--color-bg-2</div>
+          </div>
+          <div class="state">
+            <div class="state__title">Hover</div>
+            <div class="state__demo" style="background: var(--color-bg-hover); border: 1px solid var(--color-border-strong);">bg-hover</div>
+            <div class="mono">--color-bg-hover</div>
+          </div>
+          <div class="state">
+            <div class="state__title">Active</div>
+            <div class="state__demo" style="background: var(--color-bg-active); border: 1px solid var(--color-border-strong);">bg-active</div>
+            <div class="mono">--color-bg-active</div>
+          </div>
+          <div class="state">
+            <div class="state__title">Focus</div>
+            <div class="state__demo" style="background: var(--color-bg-2); border: 1px solid var(--color-border-focus); box-shadow: var(--shadow-focus);">3px ring</div>
+            <div class="mono">--shadow-focus</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BORDERS -->
+      <section class="section">
+        <h2 class="sec">Borders</h2>
+        <p class="sub-lede">Three levels &mdash; almost invisible to visible. Anything above <span class="mono">--border-strong</span> on dark turns into a frame and breaks the calm.</p>
+        <div class="grid-4">
+          <div class="card" style="padding: 18px; border: 1px solid var(--color-border-subtle);">
+            <div class="mono">--border-subtle</div>
+            <div class="text-tertiary" style="font-size:12px; margin-top:6px;">oklch(20% .004 260)</div>
+            <div style="font-size:12px; margin-top:10px;">Cards, table rows, list dividers.</div>
+          </div>
+          <div class="card" style="padding: 18px; border: 1px solid var(--color-border-default);">
+            <div class="mono">--border-default</div>
+            <div class="text-tertiary" style="font-size:12px; margin-top:6px;">oklch(24% .005 260)</div>
+            <div style="font-size:12px; margin-top:10px;">Inputs, buttons, selects.</div>
+          </div>
+          <div class="card" style="padding: 18px; border: 1px solid var(--color-border-strong);">
+            <div class="mono">--border-strong</div>
+            <div class="text-tertiary" style="font-size:12px; margin-top:6px;">oklch(32% .006 260)</div>
+            <div style="font-size:12px; margin-top:10px;">Hover/active on inputs, separators.</div>
+          </div>
+          <div class="card" style="padding: 18px; border: 1px solid var(--color-border-focus);">
+            <div class="mono">--border-focus</div>
+            <div class="text-tertiary" style="font-size:12px; margin-top:6px;">oklch(70% .13 264)</div>
+            <div style="font-size:12px; margin-top:10px;">Focus rings only. Loud on purpose.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHART -->
+      <section class="section">
+        <h2 class="sec">Chart palette</h2>
+        <p class="sub-lede">Eight categorical series tuned for OLED. Equal perceptual brightness; ordered for series 1 → 8 with brand indigo first.</p>
+        <div class="charts" style="grid-template-columns: repeat(8, 1fr);">
+          <div class="ch"><div class="ch__sw" style="background: oklch(70% .13 264)"></div><div class="ch__name">chart-1</div><div class="ch__val">indigo</div></div>
+          <div class="ch"><div class="ch__sw" style="background: oklch(72% .12 200)"></div><div class="ch__name">chart-2</div><div class="ch__val">cyan</div></div>
+          <div class="ch"><div class="ch__sw" style="background: oklch(74% .12 152)"></div><div class="ch__name">chart-3</div><div class="ch__val">green</div></div>
+          <div class="ch"><div class="ch__sw" style="background: oklch(78% .13 90)"></div><div class="ch__name">chart-4</div><div class="ch__val">olive</div></div>
+          <div class="ch"><div class="ch__sw" style="background: oklch(78% .13 70)"></div><div class="ch__name">chart-5</div><div class="ch__val">amber</div></div>
+          <div class="ch"><div class="ch__sw" style="background: oklch(72% .15 25)"></div><div class="ch__name">chart-6</div><div class="ch__val">red</div></div>
+          <div class="ch"><div class="ch__sw" style="background: oklch(70% .15 340)"></div><div class="ch__name">chart-7</div><div class="ch__val">pink</div></div>
+          <div class="ch"><div class="ch__sw" style="background: oklch(68% .13 300)"></div><div class="ch__name">chart-8</div><div class="ch__val">violet</div></div>
+        </div>
+      </section>
+
+      <!-- SPECIALIZED -->
+      <section class="section">
+        <h2 class="sec">Specialised tokens</h2>
+        <p class="sub-lede">Sidebar, header, and table use the same surface tokens with named aliases for clarity in component code.</p>
+        <div class="grid-3">
+          <div class="card">
+            <h3 class="sub">Sidebar</h3>
+            <div class="mono" style="margin: 8px 0;">--sidebar-bg     = bg-3</div>
+            <div class="mono" style="margin: 8px 0;">--sidebar-border = border-subtle</div>
+            <div class="mono" style="margin: 8px 0;">--sidebar-item-hover  = bg-hover</div>
+            <div class="mono" style="margin: 8px 0;">--sidebar-item-active = bg-active</div>
+            <div class="mono" style="margin: 8px 0;">--sidebar-text   = text-secondary</div>
+            <div class="mono" style="margin: 8px 0;">--sidebar-text-active = text-primary</div>
+          </div>
+          <div class="card">
+            <h3 class="sub">Header</h3>
+            <div class="mono" style="margin: 8px 0;">--header-bg     = bg-1 / .85 +blur</div>
+            <div class="mono" style="margin: 8px 0;">--header-border = border-subtle</div>
+            <div class="mono" style="margin: 8px 0;">--header-title  = text-primary</div>
+            <div class="mono" style="margin: 8px 0;">--header-meta   = text-tertiary</div>
+            <div class="mono" style="margin: 8px 0;">--header-kbd-bg = bg-2</div>
+          </div>
+          <div class="card">
+            <h3 class="sub">Table</h3>
+            <div class="mono" style="margin: 8px 0;">--table-head-bg     = bg-3</div>
+            <div class="mono" style="margin: 8px 0;">--table-row-border  = border-subtle</div>
+            <div class="mono" style="margin: 8px 0;">--table-row-hover   = bg-hover</div>
+            <div class="mono" style="margin: 8px 0;">--table-row-selected= accent-50</div>
+            <div class="mono" style="margin: 8px 0;">--table-cell-text   = text-primary</div>
+            <div class="mono" style="margin: 8px 0;">--table-cell-meta   = text-tertiary</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NAMING -->
+      <section class="section">
+        <h2 class="sec">Naming convention &mdash; shadcn / Tailwind aliases</h2>
+        <p class="sub-lede">TOMS tokens are mirrored to the shadcn/ui semantic vocabulary so any shadcn component drops in unchanged.</p>
+        <div class="nc">
+          <div class="nc-row"><div class="nc-row__layer">Surface</div><div class="nc-row__from">--color-bg-1</div><div class="nc-row__to">--background</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Surface</div><div class="nc-row__from">--color-bg-2</div><div class="nc-row__to">--card · --popover</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Surface</div><div class="nc-row__from">--color-bg-3</div><div class="nc-row__to">--muted · --sidebar</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Text</div><div class="nc-row__from">--color-text-primary</div><div class="nc-row__to">--foreground · --card-foreground</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Text</div><div class="nc-row__from">--color-text-secondary</div><div class="nc-row__to">--muted-foreground</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Brand</div><div class="nc-row__from">--color-primary-700</div><div class="nc-row__to">--primary</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Brand</div><div class="nc-row__from">--color-text-on-primary</div><div class="nc-row__to">--primary-foreground</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Accent</div><div class="nc-row__from">--color-accent-500</div><div class="nc-row__to">--accent · --ring</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Semantic</div><div class="nc-row__from">--color-error-500</div><div class="nc-row__to">--destructive</div></div>
+          <div class="nc-row"><div class="nc-row__layer">Border</div><div class="nc-row__from">--color-border-default</div><div class="nc-row__to">--border · --input</div></div>
+        </div>
+      </section>
+
+      <!-- LIGHT VS DARK -->
+      <section class="section">
+        <h2 class="sec">Light ↔ Dark · full parity table</h2>
+        <p class="sub-lede">Single source of truth. Every token has a light value and a dark value with no orphans.</p>
+        <table class="ct">
+          <thead>
+            <tr><th>Token</th><th>Light</th><th>Dark</th><th>Role</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="k">--color-bg-1</td>
+              <td class="v"><span class="sw" style="background: oklch(99% .003 90)"></span>oklch(99% .003 90)</td>
+              <td class="v"><span class="sw" style="background: oklch(14% .003 260)"></span>oklch(14% .003 260)</td>
+              <td>App canvas</td></tr>
+            <tr><td class="k">--color-bg-2</td>
+              <td class="v"><span class="sw" style="background: #fff"></span>#ffffff</td>
+              <td class="v"><span class="sw" style="background: oklch(17% .004 260)"></span>oklch(17% .004 260)</td>
+              <td>Card / surface</td></tr>
+            <tr><td class="k">--color-bg-3</td>
+              <td class="v"><span class="sw" style="background: oklch(97.2% .004 90)"></span>oklch(97.2% .004 90)</td>
+              <td class="v"><span class="sw" style="background: oklch(11% .003 260)"></span>oklch(11% .003 260)</td>
+              <td>Sunken / sidebar</td></tr>
+            <tr><td class="k">--color-bg-hover</td>
+              <td class="v"><span class="sw" style="background: oklch(95.8% .005 90)"></span>oklch(95.8% .005 90)</td>
+              <td class="v"><span class="sw" style="background: oklch(22% .005 260)"></span>oklch(22% .005 260)</td>
+              <td>Hover state</td></tr>
+            <tr><td class="k">--color-bg-active</td>
+              <td class="v"><span class="sw" style="background: oklch(93.5% .006 90)"></span>oklch(93.5% .006 90)</td>
+              <td class="v"><span class="sw" style="background: oklch(26% .006 260)"></span>oklch(26% .006 260)</td>
+              <td>Active state</td></tr>
+            <tr><td class="k">--color-bg-overlay</td>
+              <td class="v">oklch(15% .01 270 / .45)</td>
+              <td class="v">oklch(0% 0 0 / .65)</td>
+              <td>Dialog scrim</td></tr>
+            <tr><td class="k">--color-text-primary</td>
+              <td class="v"><span class="sw" style="background: oklch(18% .01 270)"></span>oklch(18% .01 270)</td>
+              <td class="v"><span class="sw" style="background: oklch(94% .003 260)"></span>oklch(94% .003 260)</td>
+              <td>Headings, body</td></tr>
+            <tr><td class="k">--color-text-secondary</td>
+              <td class="v"><span class="sw" style="background: oklch(42% .008 270)"></span>oklch(42% .008 270)</td>
+              <td class="v"><span class="sw" style="background: oklch(66% .005 260)"></span>oklch(66% .005 260)</td>
+              <td>Subtitles, meta</td></tr>
+            <tr><td class="k">--color-text-tertiary</td>
+              <td class="v"><span class="sw" style="background: oklch(58% .006 270)"></span>oklch(58% .006 270)</td>
+              <td class="v"><span class="sw" style="background: oklch(50% .005 260)"></span>oklch(50% .005 260)</td>
+              <td>Hints, captions</td></tr>
+            <tr><td class="k">--color-text-disabled</td>
+              <td class="v"><span class="sw" style="background: oklch(72% .005 270)"></span>oklch(72% .005 270)</td>
+              <td class="v"><span class="sw" style="background: oklch(38% .005 260)"></span>oklch(38% .005 260)</td>
+              <td>Disabled labels</td></tr>
+            <tr><td class="k">--color-primary-700</td>
+              <td class="v"><span class="sw" style="background: oklch(24% .06 262)"></span>oklch(24% .06 262)</td>
+              <td class="v"><span class="sw" style="background: oklch(88% .004 260)"></span>oklch(88% .004 260)</td>
+              <td>CTA fill (dark inverts)</td></tr>
+            <tr><td class="k">--color-text-on-primary</td>
+              <td class="v"><span class="sw" style="background: #fff"></span>oklch(99% 0 0)</td>
+              <td class="v"><span class="sw" style="background: oklch(14% .003 260)"></span>oklch(14% .003 260)</td>
+              <td>Text on CTA</td></tr>
+            <tr><td class="k">--color-accent-500</td>
+              <td class="v"><span class="sw" style="background: oklch(58% .22 270)"></span>oklch(58% .22 270)</td>
+              <td class="v"><span class="sw" style="background: oklch(70% .13 264)"></span>oklch(70% .13 264)</td>
+              <td>Brand · focus ring</td></tr>
+            <tr><td class="k">--color-border-subtle</td>
+              <td class="v"><span class="sw" style="background: oklch(93% .005 90)"></span>oklch(93% .005 90)</td>
+              <td class="v"><span class="sw" style="background: oklch(20% .004 260)"></span>oklch(20% .004 260)</td>
+              <td>Hairlines</td></tr>
+            <tr><td class="k">--color-border-default</td>
+              <td class="v"><span class="sw" style="background: oklch(89% .005 90)"></span>oklch(89% .005 90)</td>
+              <td class="v"><span class="sw" style="background: oklch(24% .005 260)"></span>oklch(24% .005 260)</td>
+              <td>Inputs, buttons</td></tr>
+            <tr><td class="k">--color-success-500</td>
+              <td class="v"><span class="sw" style="background: oklch(58% .14 152)"></span>oklch(58% .14 152)</td>
+              <td class="v"><span class="sw" style="background: oklch(68% .13 152)"></span>oklch(68% .13 152)</td>
+              <td>Success fill</td></tr>
+            <tr><td class="k">--color-warning-500</td>
+              <td class="v"><span class="sw" style="background: oklch(70% .16 70)"></span>oklch(70% .16 70)</td>
+              <td class="v"><span class="sw" style="background: oklch(76% .13 70)"></span>oklch(76% .13 70)</td>
+              <td>Warning fill</td></tr>
+            <tr><td class="k">--color-error-500</td>
+              <td class="v"><span class="sw" style="background: oklch(58% .20 25)"></span>oklch(58% .20 25)</td>
+              <td class="v"><span class="sw" style="background: oklch(68% .16 25)"></span>oklch(68% .16 25)</td>
+              <td>Destructive</td></tr>
+            <tr><td class="k">--color-info-500</td>
+              <td class="v"><span class="sw" style="background: oklch(60% .14 230)"></span>oklch(60% .14 230)</td>
+              <td class="v"><span class="sw" style="background: oklch(70% .12 235)"></span>oklch(70% .12 235)</td>
+              <td>Info fill</td></tr>
+            <tr><td class="k">--shadow-3</td>
+              <td class="v">0 4px 12px rgba(0 0 0 / .06)</td>
+              <td class="v">0 4px 10px rgba(0 0 0 / .60)</td>
+              <td>Card elevation</td></tr>
+            <tr><td class="k">--shadow-focus</td>
+              <td class="v">3px ring · accent .25</td>
+              <td class="v">3px ring · accent .40</td>
+              <td>Focus halo</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </template>
+
+  <script>
+    document.body.appendChild(document.getElementById('page-content-tpl').content.cloneNode(true));
+    window.__DM_PAGE = 'tokens';
+    window.__DM_CRUMBS = ['Tokens'];
+  </script>
+  <script src="chrome.js"></script>
+</body>
+</html>

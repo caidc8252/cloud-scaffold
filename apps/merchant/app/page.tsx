@@ -1,10 +1,5 @@
-export default function MerchantHomePage() {
-  return (
-    <main className="p-5">
-      <section className="rounded-md border border-zinc-200 bg-white p-5">
-        <h1 className="text-lg font-semibold">Merchant Console</h1>
-        <p className="mt-2 text-sm text-zinc-600">商户后台骨架已接入 monorepo 公共 UI。</p>
-      </section>
-    </main>
-  );
+import { redirect } from 'next/navigation'
+
+export default function Home() {
+  redirect('/customers')
 }
