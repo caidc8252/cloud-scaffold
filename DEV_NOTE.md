@@ -8,16 +8,20 @@
 
 ### 决策
 
+- **版本**：Prisma ORM **v7**（`prisma` / `@prisma/client` 均在根 `pnpm-workspace.yaml` catalog 中锁到 `^7.6.0`）。
 - **生成器**：使用 `prisma-client`（不要回退到 `prisma-client-js`，后者官方已 deprecated）。
-- **生成位置**：`packages/db/src/generated/client`。落到包源码树内的好处：
+- **生成位置**：`packages/db/generated/client`（与 `src/` 平级，避免污染源码目录）。这样落地的好处：
   - 不依赖 pnpm 对 `node_modules/.prisma/client` 的 symlink，避免 worktree / 分支切换后客户端与 schema 不一致。
   - 生成的是普通 TS 源码，Next.js / tsx 直接消费，无运行时桥接。
-- **生成产物不入 git**：`.gitignore` 已排除 `packages/db/src/generated/`。`pnpm install` 的 postinstall 钩子负责重新生成。
+- **生成产物不入 git**：`.gitignore` 已排除 `packages/db/generated/`。`pnpm install` 的 postinstall 钩子负责重新生成。
 - **唯一事实源**：`packages/db/prisma.config.ts`。schema / migrations / seed 路径都从这里读，不要散落到各 `package.json` script。
+  - **v7 起 `datasource.url` 必须从 `schema.prisma` 移走**，由 `prisma.config.ts` 的 `datasource: { url: env("DATABASE_URL") }` 提供给 CLI；运行时连接走 driver adapter。schema 里的 `datasource db { provider = "postgresql" }` 只保留 `provider`，加 `url` 会触发 P1012。
+- **驱动适配器**：v7 起 SQL provider 必须显式注入 driver adapter，内置 query engine 不再直连数据库。本仓使用 `@prisma/adapter-pg` + `pg`，**只在 `packages/db` 声明**，应用层照旧 `import { prisma } from "@cloud/db"`，不需要感知 adapter。
 - **唯一消费入口**：`import { prisma, ... } from "@cloud/db"`。
   - 禁止任何 app / package 直接 `import { PrismaClient } from "@prisma/client"`。
-  - 禁止深入 `@cloud/db/src/generated/*` 子路径。
+  - 禁止深入 `@cloud/db/generated/*` 子路径。
   - 需要 enum / 输入输出类型时也走 `@cloud/db` 的 re-export。
+  - `packages/db/prisma/seed.ts` 也走共享单例（`import { prisma } from "../src/index.ts"`），避免第二处 adapter 构造。
 
 ### 多人协作流程
 
@@ -31,7 +35,7 @@
 
 ### 故障排查
 
-- **类型不存在 / 找不到 `PrismaClient`**：先 `pnpm db:generate`，确认 `packages/db/src/generated/client/` 下有 `client.ts`。
+- **类型不存在 / 找不到 `PrismaClient`**：先 `pnpm db:generate`，确认 `packages/db/generated/client/` 下有 `client.ts`。
 - **`Cannot find module '../../node_modules/prisma/...'`**：脚本应该走 pnpm bin（`prisma ...`），不要再写绝对路径。
 - **postinstall 失败但只是想跑 generate 之外的命令**：可以临时 `PRISMA_SKIP_POSTINSTALL_GENERATE=1 pnpm install`（注意不是默认行为）。
 

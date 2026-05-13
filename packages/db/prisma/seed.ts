@@ -1,8 +1,6 @@
 import { hashPassword } from "@cloud/security";
 import { randomUUID } from "node:crypto";
-import { PrismaClient } from "../src/generated/client/client.ts";
-
-const prisma = new PrismaClient();
+import { prisma } from "../src/index.ts";
 
 const platformRoles = [
   {

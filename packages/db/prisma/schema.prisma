@@ -1,6 +1,6 @@
 generator client {
   provider            = "prisma-client"
-  output              = "../src/generated/client"
+  output              = "../generated/client"
   runtime             = "nodejs"
   moduleFormat        = "esm"
   importFileExtension = "ts"
@@ -8,7 +8,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {

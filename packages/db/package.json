@@ -16,9 +16,12 @@
   },
   "dependencies": {
     "@cloud/security": "workspace:*",
-    "@prisma/client": "catalog:"
+    "@prisma/adapter-pg": "^7.6.0",
+    "@prisma/client": "catalog:",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
+    "@types/pg": "^8.11.10",
     "dotenv": "^16.6.1",
     "prisma": "catalog:",
     "tsx": "^4.20.6"
