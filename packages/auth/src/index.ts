@@ -1,5 +1,5 @@
 import { getSessionSnapshot, setSessionSnapshot, type SessionSnapshot } from "@cloud/cache";
-import { getEnv, parseTrustedOrigins } from "@cloud/config";
+import { getEnv, resolveTrustedOrigins } from "@cloud/config";
 import { prisma } from "@cloud/db";
 import { hashPassword, verifyPassword } from "@cloud/security";
 import { betterAuth } from "better-auth";
@@ -11,7 +11,7 @@ const env = getEnv();
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: parseTrustedOrigins(env.BETTER_AUTH_TRUSTED_ORIGINS),
+  trustedOrigins: resolveTrustedOrigins(),
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),

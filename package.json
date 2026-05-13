@@ -8,7 +8,7 @@
     "dev:partner": "pnpm --filter partner dev",
     "dev:merchant": "pnpm --filter merchant dev",
     "dev:admin": "pnpm --filter admin dev",
-    "build": "pnpm -r --filter './apps/*' build",
+    "build": "pnpm db:generate && pnpm -r --filter './apps/*' build",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -16,6 +16,8 @@
     "test:watch": "vitest",
     "db:generate": "pnpm --filter @cloud/db prisma:generate",
     "db:migrate": "pnpm --filter @cloud/db prisma:migrate",
+    "db:deploy": "pnpm --filter @cloud/db prisma:deploy",
+    "db:studio": "pnpm --filter @cloud/db prisma:studio",
     "db:seed": "pnpm --filter @cloud/db prisma:seed"
   },
   "dependencies": {

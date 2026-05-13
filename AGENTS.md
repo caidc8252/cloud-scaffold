@@ -72,6 +72,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   - 避免使用缩写，除非是广泛认可的缩写
   - 函数使用动词或动宾短语命名，类使用名词命名，bool 变量使用 is/has/can 开头
 - 单组件、库、脚本的长度不要超过 400 行，尽量控制在 300 行附近
+- 适量注释，配置项、变量要足够
 
 
 

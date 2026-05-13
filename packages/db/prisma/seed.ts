@@ -1,6 +1,6 @@
 import { hashPassword } from "@cloud/security";
-import { PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
+import { PrismaClient } from "../src/generated/client/client.ts";
 
 const prisma = new PrismaClient();
 
