@@ -1,14 +1,14 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-interface PageHeaderProps {
+interface ContentHeaderProps {
   title: string
   description?: string
   className?: string
   children?: React.ReactNode
 }
 
-function PageHeader({ title, description, className, children }: PageHeaderProps) {
+function ContentHeader({ title, description, className, children }: ContentHeaderProps) {
   return (
     <div className={cn('flex items-start justify-between mb-6', className)}>
       <div>
@@ -26,4 +26,4 @@ function PageHeader({ title, description, className, children }: PageHeaderProps
   )
 }
 
-export { PageHeader }
+export { ContentHeader }

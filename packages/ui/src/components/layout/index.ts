@@ -1,3 +1,4 @@
 export * from './sidebar'
-export * from './page-header'
+export * from './content-header'
+export * from './app-header'
 export * from './layout'

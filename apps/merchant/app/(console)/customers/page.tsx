@@ -6,7 +6,7 @@ import { Download, Plus, ChevronRight, Search } from 'lucide-react'
 import {
   Button, Input, Badge, Card, CardContent, Pagination,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-  PageHeader, Table, type TableColumn,
+  ContentHeader, Table, type TableColumn,
 } from '@cloud/ui'
 import { CompanyLogo } from '@/components/layout/company-logo'
 import { ContractBadge } from '@/components/layout/contract-badge'
@@ -108,7 +108,7 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <PageHeader
+      <ContentHeader
         title="Customers"
         description="Maintain customer companies, their contracts and operators."
       >
@@ -118,7 +118,7 @@ export default function CustomersPage() {
           <Button variant="primary" size="md" onClick={() => router.push('/customers/new')}>
             <Plus size={14} /> New customer
           </Button>
-      </PageHeader>
+      </ContentHeader>
 
       {/* Stat cards */}
       <div className="grid grid-cols-4 gap-3 mb-5">

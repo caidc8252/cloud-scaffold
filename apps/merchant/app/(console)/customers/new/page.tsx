@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { X, Check, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button, Card, CardHeader, CardTitle, CardContent, PageHeader } from '@cloud/ui'
+import { Button, Card, CardHeader, CardTitle, CardContent, ContentHeader } from '@cloud/ui'
 import { ContractBadge } from '@/components/layout/contract-badge'
 import { StepCompany, type CompanyForm } from './_components/step-company'
 import { StepContracts, type ContractKind } from './_components/step-contracts'
@@ -39,14 +39,14 @@ export default function NewCustomerPage() {
 
   return (
     <div>
-      <PageHeader
+      <ContentHeader
         title="New customer"
         description="Register a company and configure its contracts. Operators can be added later from the customer detail."
       >
         <Button variant="ghost" size="md" onClick={() => router.push('/customers')}>
           <X size={14} /> Cancel
         </Button>
-      </PageHeader>
+      </ContentHeader>
 
       {/* Stepper */}
       <Card className="mb-8 px-6 py-4">
