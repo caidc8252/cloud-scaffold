@@ -56,7 +56,7 @@ function NavigationMenuItem({
 }
 
 const navigationMenuTriggerStyle = cva(
-  "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all outline-none cursor-pointer hover:bg-surface-hover focus:bg-surface-hover focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 disabled:cursor-not-allowed disabled:opacity-50 data-popup-open:bg-surface-hover data-open:bg-surface-hover"
+  "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-md px-2.5 py-1.5 text-sm font-medium transition-all outline-none cursor-pointer hover:bg-surface-hover focus:bg-surface-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-1 disabled:cursor-not-allowed disabled:opacity-50 data-popup-open:bg-surface-hover data-open:bg-surface-hover"
 )
 
 function NavigationMenuTrigger({
@@ -71,7 +71,7 @@ function NavigationMenuTrigger({
       {...props}
     >
       {children}{" "}
-      <ChevronDownIcon className="relative top-px ml-1 size-3 transition duration-300 group-data-popup-open/navigation-menu-trigger:rotate-180 group-data-open/navigation-menu-trigger:rotate-180" aria-hidden="true" />
+      <ChevronDownIcon className="relative top-px ml-1 size-3.5 transition duration-300 group-data-popup-open/navigation-menu-trigger:rotate-180 group-data-open/navigation-menu-trigger:rotate-180" aria-hidden="true" />
     </NavigationMenuPrimitive.Trigger>
   )
 }
@@ -129,7 +129,7 @@ function NavigationMenuLink({
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
       className={cn(
-        "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none cursor-pointer hover:bg-surface-hover focus:bg-surface-hover focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-surface-active [&_svg:not([class*='size-'])]:size-4",
+        "flex items-center gap-2 rounded-md p-2 text-sm transition-all outline-none cursor-pointer hover:bg-surface-hover focus:bg-surface-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-1 in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-surface-active [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

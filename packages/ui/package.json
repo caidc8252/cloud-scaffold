@@ -8,8 +8,11 @@
   "exports": {
     ".": "./src/index.ts",
     "./globals.css": "./src/components/styles/index.css",
+    "./component-defaults.css": "./src/components/styles/component-defaults.css",
     "./components/ui": "./src/components/ui/index.ts",
     "./components/ui/*": "./src/components/ui/*.tsx",
+    "./components/layout": "./src/components/layout/index.ts",
+    "./components/layout/*": "./src/components/layout/*.tsx",
     "./lib/utils": "./src/lib/utils.ts",
     "./lib/theme": "./src/lib/theme.tsx",
     "./utils": "./src/lib/utils.ts",

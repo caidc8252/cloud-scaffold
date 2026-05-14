@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { usePathname, useParams } from 'next/navigation'
 import { Search, Bell } from 'lucide-react'
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@cloud/ui'
@@ -22,14 +23,16 @@ export function PortalHeader({ onSearchClick }: PortalHeaderProps) {
       <Breadcrumb>
         <BreadcrumbList>
           {crumbs.map((crumb, i) => (
-            <BreadcrumbItem key={i}>
+            <React.Fragment key={i}>
               {i > 0 && <BreadcrumbSeparator />}
-              {crumb.href ? (
-                <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
-              ) : (
-                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {crumb.href ? (
+                  <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
           ))}
         </BreadcrumbList>
       </Breadcrumb>

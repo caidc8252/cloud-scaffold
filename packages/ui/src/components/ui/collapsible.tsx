@@ -8,7 +8,7 @@ function Collapsible({ className, ...props }: CollapsiblePrimitive.Root.Props) {
   return (
     <CollapsiblePrimitive.Root
       data-slot="collapsible"
-      className={cn("group/collapsible rounded-lg border border-line-subtle", className)}
+      className={cn("group/collapsible rounded-md border border-line-subtle", className)}
       {...props}
     />
   )

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type SortDir = 'asc' | 'desc' | null
@@ -22,16 +23,17 @@ export interface TableProps<R> {
   sort?: { key: string; dir: Exclude<SortDir, null> }
   /** Pass null to clear the current sort */
   onSortChange?: (sort: { key: string; dir: Exclude<SortDir, null> } | null) => void
+  onRowClick?: (row: R, index: number) => void
   empty?: React.ReactNode
   className?: string
 }
 
-export function Table<R>({ columns, rows, rowKey, sort, onSortChange, empty = 'No data', className }: TableProps<R>) {
+export function Table<R>({ columns, rows, rowKey, sort, onSortChange, onRowClick, empty = 'No data', className }: TableProps<R>) {
   const handleSort = (col: TableColumn<R>) => {
     if (!col.sortable || !onSortChange) return
     if (!sort || sort.key !== col.key) onSortChange({ key: col.key, dir: 'asc' })
     else if (sort.dir === 'asc') onSortChange({ key: col.key, dir: 'desc' })
-    else onSortChange(null)
+    else onSortChange({ key: col.key, dir: 'asc' })
   }
 
   return (
@@ -51,9 +53,12 @@ export function Table<R>({ columns, rows, rowKey, sort, onSortChange, empty = 'N
                     className="inline-flex items-center gap-1 cursor-pointer hover:text-content-primary focus-visible:outline-none"
                   >
                     {col.title}
-                    <span className={cn('text-xs', sort?.key === col.key ? 'opacity-100' : 'opacity-30')}>
-                      {sort?.key === col.key && sort.dir === 'desc' ? '▼' : '▲'}
-                    </span>
+                    {sort?.key === col.key
+                      ? sort.dir === 'asc'
+                        ? <ChevronUp className="size-3.5" />
+                        : <ChevronDown className="size-3.5" />
+                      : <ChevronsUpDown className="size-3.5 opacity-30" />
+                    }
                   </button>
                 ) : col.title}
               </th>
@@ -71,7 +76,11 @@ export function Table<R>({ columns, rows, rowKey, sort, onSortChange, empty = 'N
             rows.map((row, i) => (
               <tr
                 key={rowKey(row, i)}
-                className="border-b border-line-subtle hover:bg-surface-hover transition-colors duration-fast"
+                onClick={onRowClick ? () => onRowClick(row, i) : undefined}
+                className={cn(
+                  'border-b border-line-subtle hover:bg-surface-hover transition-colors duration-fast',
+                  onRowClick && 'cursor-pointer',
+                )}
               >
                 {columns.map((col) => (
                   <td key={col.key} style={{ textAlign: col.align ?? 'left' }} className="px-4 py-3 text-content-primary">

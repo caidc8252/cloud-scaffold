@@ -98,7 +98,7 @@ function MenubarItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "group/menubar-item gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-hover focus:text-content-primary not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive!",
+        "group/menubar-item gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-hover focus:text-content-primary not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:opacity-50 data-[variant=destructive]:*:[svg]:text-destructive!",
         className
       )}
       {...props}
@@ -126,7 +126,7 @@ function MenubarCheckboxItem({
       checked={checked}
       {...props}
     >
-      <span className="pointer-events-none absolute left-1.5 flex size-4 items-center justify-center [&_svg:not([class*='size-'])]:size-4">
+      <span className="pointer-events-none absolute left-1.5 flex size-3.5 items-center justify-center">
         <MenuPrimitive.CheckboxItemIndicator>
           <CheckIcon
           />
@@ -156,12 +156,12 @@ function MenubarRadioItem({
       data-slot="menubar-radio-item"
       data-inset={inset}
       className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-surface-hover focus:text-content-primary focus:**:text-accent-foreground data-inset:pl-7 data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm outline-hidden select-none focus:bg-surface-hover focus:text-content-primary focus:**:text-accent-foreground data-inset:pl-7 data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       {...props}
     >
-      <span className="pointer-events-none absolute left-1.5 flex size-4 items-center justify-center [&_svg:not([class*='size-'])]:size-4">
+      <span className="pointer-events-none absolute left-1.5 flex size-3.5 items-center justify-center">
         <MenuPrimitive.RadioItemIndicator>
           <CheckIcon
           />
@@ -239,7 +239,7 @@ function MenubarSubTrigger({
       data-slot="menubar-sub-trigger"
       data-inset={inset}
       className={cn(
-        "gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-hover focus:text-content-primary data-inset:pl-7 data-open:bg-surface-hover [&_svg:not([class*='size-'])]:size-4",
+        "gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-hover focus:text-content-primary data-inset:pl-7 data-open:bg-surface-hover",
         className
       )}
       {...props}

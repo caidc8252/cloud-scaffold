@@ -53,3 +53,5 @@ next-env.d.ts
 .codex/skills/
 .codex/plugins/cache/
 .codex/codex_with_cc
+
+example/design token/preview/*
