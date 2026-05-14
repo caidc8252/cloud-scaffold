@@ -4,6 +4,7 @@ import { cva } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon } from "lucide-react"
 
+// Top-level site navigation with flyout panels; use for primary site header navigation.
 function NavigationMenu({
   align = "start",
   className,

@@ -2,6 +2,8 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+// Bordered content container. size: 'default'|'sm' reduces padding across CardHeader/CardContent/CardFooter.
+// Set size once on Card; sub-components respond automatically via CSS group-data selectors.
 function Card({
   className,
   size = "default",

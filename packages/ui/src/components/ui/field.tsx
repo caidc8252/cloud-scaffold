@@ -15,6 +15,9 @@ export interface FieldProps {
   children: React.ReactNode
 }
 
+// Form field wrapper that stacks label → control → hint/error.
+// error takes precedence over hint; renders red text with role="alert" for a11y.
+// Omit htmlFor for radio/checkbox groups that have no single target element.
 export const Field: React.FC<FieldProps> = ({ label, hint, error, required, htmlFor, className, children }) => (
   <div className={cn('flex flex-col gap-1.5', className)}>
     {label && (

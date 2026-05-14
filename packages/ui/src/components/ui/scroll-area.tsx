@@ -4,6 +4,7 @@ import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
 
 import { cn } from "@/lib/utils"
 
+// Overflow container with custom-styled scrollbars that match the design system.
 function ScrollArea({
   className,
   children,

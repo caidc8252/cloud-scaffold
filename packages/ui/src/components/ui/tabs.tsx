@@ -35,6 +35,8 @@ const tabsListVariants = cva(
   }
 )
 
+// Tab bar container. variant: 'line'(default, underline indicator)|'default'(pill tabs inside a tray).
+// TabsTrigger adapts its active/hover styles automatically from the parent list's variant.
 function TabsList({
   className,
   variant,

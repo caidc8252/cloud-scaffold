@@ -3,6 +3,8 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
+// Full-page shell: fixed-height viewport with optional sidebar (w-64) and sticky header (h-14).
+// Pass sidebar and header as named slots. Content area is max-w-[1200px] centered with px-8 pt-7 pb-16.
 export const Layout: React.FC<{
   sidebar?: React.ReactNode
   header?: React.ReactNode
@@ -37,6 +39,7 @@ export interface GridProps extends React.HTMLAttributes<HTMLDivElement> {
   gap?: number | string
 }
 
+// CSS grid wrapper. columns defaults to 12; gap accepts any CSS length or design-token var.
 export const Grid: React.FC<GridProps> = ({ columns = 12, gap = 'var(--space-4)', style, children, ...rest }) => (
   <div
     style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap, ...style }}
@@ -50,6 +53,7 @@ export interface GridItemProps extends React.HTMLAttributes<HTMLDivElement> {
   span?: number
 }
 
+// Grid child. span: number of columns to occupy (default 1). Sets minWidth:0 to prevent overflow.
 export const GridItem: React.FC<GridItemProps> = ({ span = 1, style, ...rest }) => (
   <div style={{ gridColumn: `span ${span} / span ${span}`, minWidth: 0, ...style }} {...rest} />
 )
@@ -64,6 +68,7 @@ export interface StackProps extends React.HTMLAttributes<HTMLDivElement> {
   wrap?: boolean
 }
 
+// Flex container. direction: 'column'(default)|'row'; gap defaults to var(--space-3). Accepts align, justify, wrap.
 export const Stack: React.FC<StackProps> = ({ direction = 'column', gap = 'var(--space-3)', align, justify, wrap, style, ...rest }) => (
   <div
     style={{ display: 'flex', flexDirection: direction, gap, alignItems: align, justifyContent: justify, flexWrap: wrap ? 'wrap' : undefined, ...style }}

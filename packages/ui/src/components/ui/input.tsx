@@ -18,6 +18,10 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "prefix" | "suf
   suffix?: React.ReactNode
 }
 
+// Single-line text input field.
+// invalid: red border/ring error state (also sets aria-invalid).
+// inputSize: 'sm'|'md'|'lg' — controls height/padding; distinct from the HTML size attribute.
+// prefix/suffix (ReactNode): wraps the input in a flex container with non-interactive adornments.
 function Input({
   className,
   type,

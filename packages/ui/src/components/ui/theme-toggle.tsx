@@ -2,6 +2,7 @@ import * as React from 'react'
 import { useTheme } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
+// Icon button that toggles light/dark theme. Shows sun icon in dark mode, moon in light mode.
 export const ThemeToggle: React.FC<{ className?: string }> = ({ className }) => {
   const { resolved, toggle } = useTheme()
   const isDark = resolved === 'dark'

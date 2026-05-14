@@ -28,6 +28,12 @@ export interface TableProps<R> {
   className?: string
 }
 
+// Generic typed data table driven by a columns config — no manual thead/tbody markup needed.
+// columns: {key, title, render?(row)=>ReactNode, field?, sortable?, width?, align?}[]
+// rowKey: (row, index) => string|number — required for React deduplication.
+// sort + onSortChange: controlled sort state {key, dir}; pass null to clear.
+// onRowClick: makes rows cursor-pointer and calls handler with (row, index).
+// empty: custom node shown when rows is empty (defaults to "No data").
 export function Table<R>({ columns, rows, rowKey, sort, onSortChange, onRowClick, empty = 'No data', className }: TableProps<R>) {
   const handleSort = (col: TableColumn<R>) => {
     if (!col.sortable || !onSortChange) return

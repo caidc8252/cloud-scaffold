@@ -82,6 +82,7 @@ interface MenuItemProps extends React.ComponentProps<"button"> {
   destructive?: boolean
 }
 
+// Action button for use inside a popover or dropdown list. destructive: red text + hover for delete actions.
 function MenuItem({ className, destructive, type = "button", ...props }: MenuItemProps) {
   return (
     <button

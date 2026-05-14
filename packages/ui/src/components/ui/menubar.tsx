@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CheckIcon } from "lucide-react"
 
+// Horizontal menu bar with nested dropdowns; use for desktop application-style menu bars.
 function Menubar({ className, ...props }: MenubarPrimitive.Props) {
   return (
     <MenubarPrimitive

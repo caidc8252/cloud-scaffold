@@ -21,6 +21,7 @@ interface ToggleCheckboxProps {
   className?: string
 }
 
+// Checkbox with an optional inline label. indeterminate shows a dash indicator. Supports controlled (checked) and uncontrolled (defaultChecked) modes.
 function ToggleCheckbox({
   id,
   label,
@@ -71,6 +72,7 @@ interface ToggleRadioGroupProps {
   children?: React.ReactNode
 }
 
+// Parent container that manages the selected value for a group of ToggleRadio items.
 function ToggleRadioGroup({
   className,
   ...props
@@ -92,6 +94,7 @@ interface ToggleRadioProps {
   className?: string
 }
 
+// Single radio option inside ToggleRadioGroup. value is required; label is optional inline text.
 function ToggleRadio({
   id,
   value,
@@ -138,6 +141,7 @@ interface ToggleSwitchProps {
   className?: string
 }
 
+// Toggle switch with optional inline label. size: 'sm'(24×14px)|'default'(32×18px). Supports controlled and uncontrolled modes.
 function ToggleSwitch({
   id,
   label,

@@ -25,6 +25,9 @@ export interface ComboboxProps {
   className?: string
 }
 
+// Searchable single-select dropdown. options: {value, label, disabled?}[] — filtered by label text client-side.
+// invalid: red border/ring error state. size: 'sm'|'default' controls trigger height.
+// Prefer over Select when the option list is long enough to benefit from a search box.
 function Combobox({
   options,
   value,

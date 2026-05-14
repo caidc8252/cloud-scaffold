@@ -6,6 +6,7 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
   showCount?: boolean
 }
 
+// Multi-line text input field. showCount: displays a character counter when maxLength is set.
 function Textarea({
   className,
   showCount,

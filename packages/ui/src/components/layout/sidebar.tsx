@@ -127,6 +127,11 @@ function NavItemRow({ item, pathname }: { item: SidebarNavItem; pathname: string
   )
 }
 
+// Left navigation panel.
+// brand: {logo?, title, subtitle?} — renders a logo + name block at the top; defaults to a colored letter avatar.
+// sections: {label?, items[]}[] — each item: {href, icon, label, children?} where children makes it expandable.
+// Active state derived from usePathname(); sub-items show a left accent bar when active.
+// footer slot is pinned to the bottom (e.g. user avatar, settings link).
 export function Sidebar({ brand, sections, footer, className }: SidebarProps) {
   const pathname = usePathname()
 

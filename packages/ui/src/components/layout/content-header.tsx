@@ -8,6 +8,8 @@ interface ContentHeaderProps {
   children?: React.ReactNode
 }
 
+// Page-level title section placed below AppHeader. title is required; description is optional muted subtext.
+// children slot renders action buttons flush-right (e.g. a primary CTA next to the title).
 function ContentHeader({ title, description, className, children }: ContentHeaderProps) {
   return (
     <div className={cn('flex items-start justify-between mb-6', className)}>

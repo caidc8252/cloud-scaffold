@@ -34,6 +34,8 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   )
 }
 
+// Side panel that slides in from an edge. side: 'top'|'right'(default)|'bottom'|'left'.
+// showCloseButton (default true) controls the X button. Use for drawers, filters, or detail views.
 function SheetContent({
   className,
   children,

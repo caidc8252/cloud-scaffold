@@ -11,6 +11,9 @@ export interface PaginationProps {
   siblingCount?: number
 }
 
+// Page number navigation controls for paginated lists or tables.
+// page: current page (1-based). pageCount: total pages. onChange: called with the new page number.
+// siblingCount: how many page buttons to show on each side of the current page (default 1).
 export const Pagination: React.FC<PaginationProps> = ({ page, pageCount, onChange, siblingCount = 1 }) => {
   const pages = React.useMemo(() => {
     const out: (number | '…')[] = []

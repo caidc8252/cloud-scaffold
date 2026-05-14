@@ -23,6 +23,7 @@ interface SpinnerProps
   extends React.ComponentProps<"div">,
     VariantProps<typeof spinnerVariants> {}
 
+// Circular loading indicator with role="status". size: 'sm'(14px)|'md'(16px)|'lg'(20px)|'xl'(32px).
 function Spinner({ className, size, ...props }: SpinnerProps) {
   return (
     <div

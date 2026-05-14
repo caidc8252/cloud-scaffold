@@ -4,6 +4,7 @@ import { OTPInput, OTPInputContext } from "input-otp"
 import { cn } from "@/lib/utils"
 import { MinusIcon } from "lucide-react"
 
+// Segmented one-time-password input with slot-by-slot character entry.
 function InputOTP({
   className,
   containerClassName,

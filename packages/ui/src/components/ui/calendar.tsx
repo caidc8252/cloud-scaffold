@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react"
 
+// Interactive month-view date picker for selecting a single date or range.
 function Calendar({
   className,
   classNames,

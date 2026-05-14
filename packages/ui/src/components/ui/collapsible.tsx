@@ -4,6 +4,7 @@ import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible"
 import { ChevronDownIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+// Single expandable/collapsible content region; controlled by CollapsibleTrigger.
 function Collapsible({ className, ...props }: CollapsiblePrimitive.Root.Props) {
   return (
     <CollapsiblePrimitive.Root

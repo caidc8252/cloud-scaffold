@@ -55,6 +55,11 @@ interface ButtonProps extends ButtonPrimitive.Props, VariantProps<typeof buttonV
   iconRight?: React.ReactNode
 }
 
+// Clickable action button.
+// variant: 'default'|'primary'|'outline'|'secondary'|'ghost'|'destructive'|'danger'|'link'.
+// size: 'default'|'xs'|'sm'|'md'|'lg'|'icon'|'icon-xs'|'icon-sm'|'icon-lg'.
+// loading: shows a spinner in place of iconLeft and disables the button.
+// block: sets w-full. iconLeft/iconRight: inline icon slots with auto-spacing.
 function Button({
   className,
   variant = "default",

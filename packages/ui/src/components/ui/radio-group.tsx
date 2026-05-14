@@ -5,6 +5,7 @@ import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group"
 
 import { cn } from "@/lib/utils"
 
+// Mutually exclusive option group. Prefer ToggleRadioGroup/ToggleRadio (toggles.tsx) for labeled radio fields.
 function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
   return (
     <RadioGroupPrimitive

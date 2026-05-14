@@ -3,6 +3,7 @@ import * as ResizablePrimitive from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"
 
+// Draggable split-pane layout. ResizablePanel items separated by a draggable ResizableHandle.
 function ResizablePanelGroup({
   className,
   ...props

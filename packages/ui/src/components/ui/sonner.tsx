@@ -2,6 +2,8 @@ import { useTheme } from "@/lib/theme"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
+// Toast notification container. Place once in the root layout; call toast() anywhere to show a notification.
+// Theme auto-tracks the app's light/dark preference. Accepts all ToasterProps (position, duration, richColors, etc.).
 const Toaster = ({ ...props }: ToasterProps) => {
   const { preference: theme } = useTheme()
 

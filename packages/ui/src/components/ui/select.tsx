@@ -28,6 +28,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   )
 }
 
+// Dropdown trigger button. size: 'sm'|'default' controls trigger height.
 function SelectTrigger({
   className,
   size = "default",
@@ -56,6 +57,7 @@ function SelectTrigger({
   )
 }
 
+// Dropdown option list panel. alignItemWithTrigger: aligns the highlighted item with the trigger position.
 function SelectContent({
   className,
   children,

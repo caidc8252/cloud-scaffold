@@ -4,6 +4,7 @@ import { Switch as SwitchPrimitive } from "@base-ui/react/switch"
 
 import { cn } from "@/lib/utils"
 
+// Binary toggle switch. size: 'sm'|'default'. Prefer ToggleSwitch (toggles.tsx) for fields that need an inline label.
 function Switch({
   className,
   size = "default",

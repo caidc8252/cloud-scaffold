@@ -42,6 +42,7 @@ function useCarousel() {
   return context
 }
 
+// Horizontally scrollable slide container. Use CarouselPrevious/CarouselNext for navigation buttons and CarouselDots for dot indicators.
 function Carousel({
   orientation = "horizontal",
   opts,

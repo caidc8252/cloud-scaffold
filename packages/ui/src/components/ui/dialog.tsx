@@ -39,6 +39,7 @@ function DialogOverlay({
   )
 }
 
+// Centered overlay panel for focused tasks (forms, confirmations). showCloseButton (default true) controls the X button in the top-right corner.
 function DialogContent({
   className,
   children,
@@ -90,6 +91,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// Action bar at the bottom of a dialog. showCloseButton (default false) appends a "Close" outline button.
 function DialogFooter({
   className,
   showCloseButton = false,

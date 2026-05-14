@@ -25,6 +25,10 @@ interface AppHeaderProps {
   className?: string
 }
 
+// Top application bar with breadcrumb trail (left) and search/notification actions (right).
+// breadcrumbs: {label, href?}[] — items without href render as the current page (plain text, no link).
+// onSearchClick: shows a ⌘K search button when provided; omit to hide.
+// onNotificationClick: bell icon button; always rendered but click handler is optional.
 function AppHeader({
   breadcrumbs,
   onSearchClick,

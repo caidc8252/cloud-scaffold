@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/input-group"
 import { SearchIcon, CheckIcon } from "lucide-react"
 
+// Keyboard-driven command palette with fuzzy search. CommandInput filters CommandItems by their text content.
 function Command({
   className,
   ...props

@@ -17,6 +17,7 @@ function TooltipProvider({
   )
 }
 
+// Short text hint shown on hover. Wrap the trigger in TooltipTrigger; text goes in TooltipContent.
 function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }

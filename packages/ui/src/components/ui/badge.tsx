@@ -51,6 +51,8 @@ interface BadgeProps extends useRender.ComponentProps<"span">, VariantProps<type
   tone?: BadgeTone
 }
 
+// Small inline label for status or category. tone: 'neutral'|'success'|'warning'|'error'|'info' maps to semantic colors.
+// Prefer tone over variant for status indicators (e.g. order state, health checks).
 function Badge({
   className,
   variant,

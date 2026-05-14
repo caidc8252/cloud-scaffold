@@ -8,6 +8,8 @@ interface EmptyProps extends React.ComponentProps<"div"> {
   action?: React.ReactNode
 }
 
+// Empty-state placeholder with dashed border. Use inside tables, lists, or panels when there is no data.
+// icon: small icon in a rounded chip above the title. action: CTA element below description.
 function Empty({
   className,
   icon,

@@ -4,6 +4,7 @@ import { Progress as ProgressPrimitive } from "@base-ui/react/progress"
 
 import { cn } from "@/lib/utils"
 
+// Horizontal bar showing numeric completion percentage via the value prop (0–100).
 function Progress({
   className,
   children,

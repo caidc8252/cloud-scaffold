@@ -8,6 +8,8 @@ interface SeparatorProps extends SeparatorPrimitive.Props {
   label?: React.ReactNode
 }
 
+// Horizontal or vertical divider line. label (string): renders centered text between two lines.
+// Omit label for a plain divider.
 function Separator({
   className,
   orientation = "horizontal",

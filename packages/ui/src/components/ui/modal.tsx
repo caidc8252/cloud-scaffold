@@ -20,6 +20,8 @@ interface ModalProps {
   className?: string
 }
 
+// Centered overlay dialog with flat props. title/description populate the header; footer renders an action bar.
+// showCloseButton (default true) shows X icon in corner. closeOnOverlay (default true) dismisses on backdrop click.
 function Modal({
   open,
   onClose,

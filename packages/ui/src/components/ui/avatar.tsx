@@ -2,6 +2,7 @@ import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"
 import { cn } from "@/lib/utils"
 
+// Profile picture with image fallback to initials. size: 'sm'|'md'|'lg'|'xl' on the Avatar root.
 function Avatar({
   className,
   size = "md",
@@ -50,6 +51,7 @@ function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props)
   )
 }
 
+// Stacks multiple Avatar components with overlapping rings (e.g. participant lists).
 function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

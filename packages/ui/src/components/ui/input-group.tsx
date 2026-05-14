@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
+// Composite input container with a unified border. Focus, invalid, and disabled states are managed at the group level.
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -41,6 +42,7 @@ const inputGroupAddonVariants = cva(
   }
 )
 
+// Addon slot inside InputGroup. align: 'inline-start'|'inline-end' for left/right addons; 'block-start'|'block-end' for top/bottom (switches group to column layout).
 function InputGroupAddon({
   className,
   align = "inline-start",
@@ -81,6 +83,7 @@ const inputGroupButtonVariants = cva(
   }
 )
 
+// Action button inside InputGroup. Defaults to size='xs' variant='ghost' type='button'.
 function InputGroupButton({
   className,
   type = "button",
@@ -102,6 +105,7 @@ function InputGroupButton({
   )
 }
 
+// Non-interactive text/icon label inside InputGroup (e.g. currency symbol, unit suffix).
 function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
@@ -114,6 +118,7 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
+// Borderless input for inside InputGroup; strips its own border so the group border shows.
 function InputGroupInput({
   className,
   ...props
@@ -130,6 +135,7 @@ function InputGroupInput({
   )
 }
 
+// Borderless textarea for inside InputGroup; same border-stripping behavior as InputGroupInput.
 function InputGroupTextarea({
   className,
   ...props

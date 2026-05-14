@@ -21,6 +21,7 @@ const alertVariants = cva(
   }
 )
 
+// Highlighted message box for status feedback. variant: 'default'|'info'|'warning'|'error'|'success'|'destructive'. AlertAction renders a button in the top-right corner.
 function Alert({
   className,
   variant,
