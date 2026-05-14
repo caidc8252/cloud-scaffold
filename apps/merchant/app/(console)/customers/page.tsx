@@ -107,7 +107,7 @@ export default function CustomersPage() {
   ]
 
   return (
-    <div className="p-6 pb-12">
+    <div>
       <PageHeader
         title="Customers"
         description="Maintain customer companies, their contracts and operators."

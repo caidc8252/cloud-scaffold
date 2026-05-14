@@ -11,7 +11,7 @@ export const Layout: React.FC<{
 }> = ({ sidebar, header, children, className }) => (
   <div className={cn('flex h-screen overflow-hidden', className)}>
     {sidebar && (
-      <aside className="w-64 shrink-0 flex flex-col bg-surface-3 border-r border-line-subtle overflow-y-auto">
+      <aside className="w-62 shrink-0 flex flex-col bg-surface-3 overflow-y-auto">
         {sidebar}
       </aside>
     )}

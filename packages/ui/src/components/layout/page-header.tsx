@@ -16,7 +16,7 @@ function PageHeader({ title, description, className, children }: PageHeaderProps
           {title}
         </h1>
         {description && (
-          <p className="text-sm text-content-tertiary mt-1">{description}</p>
+          <p className="text-sm text-content-secondary mt-1">{description}</p>
         )}
       </div>
       {children && (

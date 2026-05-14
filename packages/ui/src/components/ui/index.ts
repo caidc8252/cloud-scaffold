@@ -1,4 +1,5 @@
 export { Button, buttonVariants } from './button'
+export { Combobox, type ComboboxOption, type ComboboxProps } from './combobox'
 export { Badge, badgeVariants } from './badge'
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction, CardFooter } from './card'
 export { Field, type FieldProps } from './field'
@@ -23,7 +24,6 @@ export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tool
 export { Toaster } from './sonner'
 export { Table, type TableProps, type TableColumn, type SortDir } from './table'
 export { Pagination, type PaginationProps } from './pagination'
-export { Layout, Grid, GridItem, Stack, type GridProps, type GridItemProps, type StackProps } from './layout'
 export { ThemeToggle } from './theme-toggle'
 export {
   ToggleCheckbox, ToggleRadioGroup, ToggleRadio, ToggleSwitch,

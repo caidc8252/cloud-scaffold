@@ -6,11 +6,11 @@ import { Search, Bell } from 'lucide-react'
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@cloud/ui'
 import { SEED_CUSTOMERS } from '@/lib/data/customers'
 
-interface PortalHeaderProps {
+interface ConsoleHeaderProps {
   onSearchClick: () => void
 }
 
-export function PortalHeader({ onSearchClick }: PortalHeaderProps) {
+export function ConsoleHeader({ onSearchClick }: ConsoleHeaderProps) {
   const pathname = usePathname()
   const params = useParams<{ id?: string }>()
 

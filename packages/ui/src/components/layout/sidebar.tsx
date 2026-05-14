@@ -133,7 +133,7 @@ export function Sidebar({ brand, sections, footer, className }: SidebarProps) {
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {brand && (
-        <div className="flex items-center gap-2.5 px-4 py-4 border-b border-line-subtle shrink-0">
+        <div className="flex items-center gap-2.5 px-4 py-4 pb-3 shrink-0   ">
           {brand.logo ?? (
             <div
               style={{
@@ -154,7 +154,7 @@ export function Sidebar({ brand, sections, footer, className }: SidebarProps) {
             </div>
           )}
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-content-primary leading-none truncate">
+            <div className="text-md font-semibold text-content-primary leading-none truncate">
               {brand.title}
             </div>
             {brand.subtitle && (
@@ -184,7 +184,7 @@ export function Sidebar({ brand, sections, footer, className }: SidebarProps) {
       </div>
 
       {footer && (
-        <div className="border-t border-line-subtle p-3 shrink-0">
+        <div className="p-3 shrink-0">
           {footer}
         </div>
       )}

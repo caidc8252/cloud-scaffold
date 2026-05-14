@@ -1,17 +1,18 @@
 import { Users, Package, FileText, User, Settings, Bell, BarChart2 } from 'lucide-react'
 import { Sidebar as UiSidebar, type SidebarSection } from '@cloud/ui'
 import { UserMenu } from './user-menu'
+import { Logo } from './logo'
 
 const SECTIONS: SidebarSection[] = [
   {
     label: 'Manage',
     items: [
-      { href: '/customers', icon: <Users size={15} />, label: 'Customers' },
-      { href: '/orders',    icon: <Package size={15} />, label: 'Orders' },
-      { href: '/contracts', icon: <FileText size={15} />, label: 'Contracts' },
-      { href: '/operators', icon: <User size={15} />,    label: 'Operators' },
+      { href: '/customers', icon: <Users size={14} />, label: 'Customers' },
+      { href: '/orders',    icon: <Package size={14} />, label: 'Orders' },
+      { href: '/contracts', icon: <FileText size={14} />, label: 'Contracts' },
+      { href: '/operators', icon: <User size={14} />,    label: 'Operators' },
       {
-        icon: <BarChart2 size={15} />,
+        icon: <BarChart2 size={14} />,
         label: 'Reports',
         children: [
           { href: '/reports/sales',    label: 'Sales' },
@@ -24,8 +25,8 @@ const SECTIONS: SidebarSection[] = [
   {
     label: 'System',
     items: [
-      { href: '/notifications', icon: <Bell size={15} />,     label: 'Notifications' },
-      { href: '/settings',      icon: <Settings size={15} />, label: 'Settings' },
+      { href: '/notifications', icon: <Bell size={14} />,     label: 'Notifications' },
+      { href: '/settings',      icon: <Settings size={14} />, label: 'Settings' },
     ],
   },
 ]
@@ -33,7 +34,7 @@ const SECTIONS: SidebarSection[] = [
 export function Sidebar() {
   return (
     <UiSidebar
-      brand={{ title: 'TOMS', subtitle: 'Carbon · Merchant' }}
+      brand={{ logo: <Logo size={32} />, title: 'TOMS', subtitle: 'Carbon · Merchant' }}
       sections={SECTIONS}
       footer={<UserMenu />}
     />

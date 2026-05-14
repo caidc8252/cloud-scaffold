@@ -42,7 +42,7 @@ export default function CustomerDetailPage() {
   }
 
   return (
-    <div className="p-6 pb-12">
+    <div>
       {/* Back + header */}
       <div className="mb-6">
         <button
