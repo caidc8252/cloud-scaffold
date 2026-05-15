@@ -10,14 +10,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@cloud/auth": "workspace:*",
-    "@cloud/cache": "workspace:*",
     "@cloud/config": "workspace:*",
     "@cloud/db": "workspace:*",
-    "@cloud/request": "workspace:*",
     "@cloud/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
-    "better-auth": "catalog:",
     "lucide-react": "catalog:",
     "next": "16.2.6",
     "react": "catalog:",

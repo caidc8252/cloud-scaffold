@@ -8,12 +8,8 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@cloud/auth": ["../../packages/auth/src/index.ts"],
-      "@cloud/cache": ["../../packages/cache/src/index.ts"],
       "@cloud/config": ["../../packages/config/src/index.ts"],
       "@cloud/db": ["../../packages/db/src/index.ts"],
-      "@cloud/permissions": ["../../packages/permissions/src/index.ts"],
-      "@cloud/request": ["../../packages/request/src/index.ts"],
       "@cloud/ui": ["../../packages/ui/src/index.ts"],
       "@cloud/ui/*": ["../../packages/ui/src/*"]
     }

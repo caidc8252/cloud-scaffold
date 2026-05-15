@@ -14,7 +14,6 @@ packages/
   ui/           # shadcn 风格基础组件、公共后台布局、Tailwind v4 样式
   request/      # fetch 封装、统一 API 响应、withApi、Zustand auth store
   db/           # Prisma schema、Prisma client、seed
-  auth/         # Better Auth 配置、Google 登录、session snapshot 构建
   cache/        # Redis client、session snapshot 读写
   permissions/  # ABAC PermissionChecker
   config/       # 环境变量校验和公共路径配置
@@ -26,7 +25,6 @@ packages/
 - Next.js `16.2.6` App Router
 - React `19`
 - pnpm workspace
-- Better Auth + Google 登录
 - Prisma + PostgreSQL
 - Redis session snapshot cache
 - ABAC 权限格式：`role.obj.method`
@@ -44,8 +42,8 @@ pnpm install
 
 Create local env files. The repository uses a two-tier layout:
 
-- Root `.env` — Docker infrastructure + shared backend secrets (DB / Redis / Better Auth secret / OAuth / session). Read by `docker-compose.yml`, by `packages/db/prisma.config.ts` for all `pnpm db:*` commands, and pre-loaded by each app's `next.config.ts`.
-- `apps/<app>/.env` — per-app deployment values (Better Auth base URL, trusted origins, public app name). Auto-loaded by Next.js from the app cwd, so values from per-app files override root values when both define the same key.
+- Root `.env` — Docker infrastructure + shared backend connections (DB / Redis). Read by `docker-compose.yml`, by `packages/db/prisma.config.ts` for all `pnpm db:*` commands, and pre-loaded by each app's `next.config.ts`.
+- `apps/<app>/.env` — per-app deployment values (public app name). Auto-loaded by Next.js from the app cwd, so values from per-app files override root values when both define the same key.
 
 ```bash
 cp .env.example .env
@@ -54,13 +52,7 @@ cp apps/admin/.env.example apps/admin/.env
 cp apps/merchant/.env.example apps/merchant/.env
 ```
 
-Update the root `.env` with real values. Generate `BETTER_AUTH_SECRET` with:
-
-```bash
-npx @better-auth/cli@latest secret
-```
-
-Paste the output as the value of `BETTER_AUTH_SECRET` in the root `.env`. If you only run one app, you can skip the other apps' files for now — Next.js will fail fast with a Zod error pointing at the missing variable. `BETTER_AUTH_TRUSTED_ORIGINS` may be left blank in development (the dev fallback allows any origin); production builds require it. See `DEV_NOTE.md` → "Better Auth Origin 校验" for details, wildcard syntax, and PaaS precedence.
+If you only run one app, you can skip the other apps' files for now — Next.js will fail fast with a Zod error pointing at the missing variable.
 
 Create and start PostgreSQL and Redis with values from the root `.env`:
 
@@ -126,63 +118,6 @@ Open:
 - Partner: http://localhost:3000
 - Merchant: `pnpm dev:merchant`, then http://localhost:3001
 - Admin: `pnpm dev:admin`, then http://localhost:3002
-
-## Auth And Permissions
-
-`apps/partner/proxy.ts` and `apps/admin/proxy.ts` handle early request checks:
-
-- public route allowlist
-- missing `session-token` redirect or JSON 401
-- `content-length` over 10 MB returns 413
-- `x-request-id` propagation
-
-Protected API routes use `withApi` from `@cloud/request`:
-
-- accepts `public`, `permission`, `querySchema`, `bodySchema`, and `paramsSchema`
-- loads Redis session snapshot
-- hydrates snapshot from Better Auth when needed
-- checks ABAC permissions
-- formats request input
-- validates query/body/params with Zod
-- returns unified success/failure JSON
-- catches and logs errors with request id, path, method, and stack
-
-Auth/session rules:
-
-- Better Auth + Prisma is the source of truth; Redis only caches session snapshots at `session:${sha256(session-token)}`.
-- Session expiration returns `SESSION_EXPIRED` and clears the session cookie.
-- Permission denial returns 401 `PERMISSION_DENIED`.
-- Multiple permissions use any-of semantics: any matching permission is enough.
-
-API response format:
-
-```ts
-type ApiSuccess<T> = {
-  success: true;
-  data: T;
-  message?: string;
-  requestId: string;
-};
-
-type ApiFailure = {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-  requestId: string;
-};
-```
-
-`PermissionChecker` supports single permission and any-of checks:
-
-```ts
-checker.has("admin.user.read");
-checker.has(["admin.user.read", "viewer.user.read"]);
-checker.can("user", "read");
-checker.can("user", ["read", "create"]);
-```
 
 ## Useful Commands
 

@@ -25,16 +25,7 @@ const nextConfig: NextConfig = {
     "*.app.github.dev",
     "*.githubpreview.dev",
   ],
-  transpilePackages: [
-    "@cloud/auth",
-    "@cloud/cache",
-    "@cloud/config",
-    "@cloud/db",
-    "@cloud/permissions",
-    "@cloud/request",
-    "@cloud/security",
-    "@cloud/ui",
-  ],
+  transpilePackages: ["@cloud/config", "@cloud/db", "@cloud/ui"],
   experimental: {
     authInterrupts: true,
     serverActions: {

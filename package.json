@@ -23,7 +23,6 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^7.6.0",
-    "better-auth": "^1.4.3",
     "bcryptjs": "^3.0.3",
     "ioredis": "^5.8.2",
     "lucide-react": "^0.552.0",
