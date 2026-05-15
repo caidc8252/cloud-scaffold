@@ -258,7 +258,7 @@ function MerchantsListScreen({ navigate, openNewMerchant }) {
               { label: "Merchants",        value: totals.merchants,  sub: "registered" },
               { label: "Stores",           value: totals.stores,     sub: "across all merchants" },
               { label: "Terminals",        value: totals.terminals,  sub: "bound to a store" },
-              { label: "Installed terminals", value: totals.installed, sub: "装机完成",          tone: "success" },
+              { label: "Installed terminals", value: totals.installed, sub: "installation completed",          tone: "success" },
             ].map(k => (
               <div key={k.label} style={{
                 padding: "12px 16px", borderRadius: "var(--radius-lg)",

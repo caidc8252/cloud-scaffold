@@ -121,7 +121,7 @@ export default function CustomersPage() {
       </ContentHeader>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-4 gap-3 mb-3">
         <StatCard label="Total customers" value={counts.total} sub="↑ 2 this week" action="Show all"
           active={status === 'All' && contract === 'All' && !q}
           onClick={() => { setStatus('All'); setContract('All'); setQ(''); setPage(1) }} />

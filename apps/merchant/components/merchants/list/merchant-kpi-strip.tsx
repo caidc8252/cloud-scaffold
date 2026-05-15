@@ -16,10 +16,10 @@ export function MerchantKpiStrip({ totals }: MerchantKpiStripProps) {
     { label: 'Merchants', value: totals.merchants, sub: 'registered' },
     { label: 'Stores', value: totals.stores, sub: 'across all merchants' },
     { label: 'Terminals', value: totals.terminals, sub: 'bound to a store' },
-    { label: 'Installed terminals', value: totals.installed, sub: '装机完成', tone: 'success' },
+    { label: 'Installed terminals', value: totals.installed, sub: 'installation completed', tone: 'success' },
   ]
   return (
-    <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+    <div className="grid gap-3 mb-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
       {tiles.map((t) => (
         <div
           key={t.label}

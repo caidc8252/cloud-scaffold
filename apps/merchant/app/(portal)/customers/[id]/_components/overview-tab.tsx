@@ -78,7 +78,7 @@ export function OverviewTab({ customer, onSave }: OverviewTabProps) {
                 <Field label="Address" required>
                   <Textarea rows={2} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
                 </Field>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <Field label="License">
                     <Input value={form.license} onChange={(e) => setForm({ ...form, license: e.target.value })} />
                   </Field>

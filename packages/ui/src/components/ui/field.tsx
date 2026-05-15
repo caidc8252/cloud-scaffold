@@ -19,7 +19,7 @@ export interface FieldProps {
 // error takes precedence over hint; renders red text with role="alert" for a11y.
 // Omit htmlFor for radio/checkbox groups that have no single target element.
 export const Field: React.FC<FieldProps> = ({ label, hint, error, required, htmlFor, className, children }) => (
-  <div className={cn('flex flex-col gap-1.5', className)}>
+  <div className={cn('flex flex-col gap-2', className)}>
     {label && (
       <Label htmlFor={htmlFor}>
         {label}

@@ -88,7 +88,7 @@ export function MerchantFormModal({ open, mode, merchant, onClose, onSave }: Mer
         </>
       }
     >
-      <div className="flex flex-col gap-3.5">
+      <div className="flex flex-col gap-4">
         <Field
           label="Merchant name"
           required

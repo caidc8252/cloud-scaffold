@@ -12,7 +12,7 @@ interface ContentHeaderProps {
 // children slot renders action buttons flush-right (e.g. a primary CTA next to the title).
 function ContentHeader({ title, description, className, children }: ContentHeaderProps) {
   return (
-    <div className={cn('flex items-start justify-between mb-6', className)}>
+    <div className={cn('flex items-start justify-between mb-3', className)}>
       <div>
         <h1 className="text-3xl font-semibold text-content-primary tracking-[-0.02em]">
           {title}

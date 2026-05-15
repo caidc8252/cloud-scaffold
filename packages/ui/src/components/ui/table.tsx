@@ -51,7 +51,7 @@ export function Table<R>({ columns, rows, rowKey, sort, onSortChange, onRowClick
               <th
                 key={col.key}
                 style={{ width: col.width, textAlign: col.align ?? 'left' }}
-                className="px-4 py-3 text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default"
+                className="px-4 py-3 text-md font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default"
               >
                 {col.sortable ? (
                   <button
@@ -61,9 +61,9 @@ export function Table<R>({ columns, rows, rowKey, sort, onSortChange, onRowClick
                     {col.title}
                     {sort?.key === col.key
                       ? sort.dir === 'asc'
-                        ? <ChevronUp className="size-3.5" />
-                        : <ChevronDown className="size-3.5" />
-                      : <ChevronsUpDown className="size-3.5 opacity-30" />
+                        ? <ChevronUp className="size-4" />
+                        : <ChevronDown className="size-4" />
+                      : <ChevronsUpDown className="size-4 opacity-30" />
                     }
                   </button>
                 ) : col.title}

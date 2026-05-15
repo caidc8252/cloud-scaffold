@@ -79,7 +79,7 @@ export function StoreFormModal({ open, mode, merchant, store, onClose, onSave, o
         </>
       }
     >
-      <div className="flex flex-col gap-3.5">
+      <div className="flex flex-col gap-4">
         <Field
           label="Store name"
           required
