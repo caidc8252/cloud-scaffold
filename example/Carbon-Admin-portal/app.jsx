@@ -1,4 +1,4 @@
-/* global React, ReactDOM, ToastProvider, CustomerList, CustomerWizard, CustomerDetail, OrderList, OrderWizard, OrderDetail, Settings, Icon, useToast, SEED_CUSTOMERS, SEED_ORDERS, useTweaks, TweaksPanel, TweakSection, TweakRadio, TweakToggle, TweakSelect, UserMenu, SignOutModal, LockScreen, UIcon, ProfilePage, AccountSecurityPage, WorkspacesPage, ActivityPage, HelpPage, FeedbackPage */
+/* global React, ReactDOM, ToastProvider, CustomerList, CustomerWizard, CustomerDetail, OrderList, OrderWizard, OrderDetail, Settings, Icon, useToast, SEED_CUSTOMERS, SEED_ORDERS, useTweaks, TweaksPanel, TweakSection, TweakRadio, TweakToggle, TweakSelect, UserMenu, SignOutModal, LockScreen, UIcon, ProfilePage, AccountSecurityPage, WorkspacesPage, ActivityPage, HelpPage, FeedbackPage, AuditLogPage, DeviceModelList, DeviceModelForm, SEED_DEVICE_MODELS */
 const { useState, useEffect, useRef } = React;
 
 const CURRENT_USER = { name: 'Jordan Diaz', email: 'admin@toms', initials: 'JD', org: 'TOMS · Carbon · Production' };
@@ -75,9 +75,10 @@ const App = () => {
 
   const [customers, setCustomers] = useState(SEED_CUSTOMERS);
   const [orders, setOrders] = useState(SEED_ORDERS);
+  const [models, setModels] = useState(SEED_DEVICE_MODELS);
   const [route, setRoute] = useState({ name: 'list' });
   const [cmdkOpen, setCmdkOpen] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState({ settings: false, orders: false, customers: false });
+  const [expandedMenus, setExpandedMenus] = useState({ settings: false, orders: false, customers: false, devices: true });
   const toggleMenu = (key) => setExpandedMenus((m) => ({ ...m, [key]: !m[key] }));
 
   // Global ⌘K / Ctrl+K and ⌘L shortcuts
@@ -115,17 +116,26 @@ const App = () => {
       if (t.demoState === 'Activity') setRoute({ name: 'activity' });
       if (t.demoState === 'Help') setRoute({ name: 'help' });
       if (t.demoState === 'Feedback') setRoute({ name: 'feedback' });
+      if (t.demoState === 'Audit log') setRoute({ name: 'audit' });
+      if (t.demoState === 'Device models') setRoute({ name: 'models' });
+      if (t.demoState === 'New model') setRoute({ name: 'model-new' });
+      if (t.demoState === 'Edit model') setRoute({ name: 'model-edit', id: models[0]?.id });
     }
-  }, [t.demoState, lastDemoState, customers, orders]);
+  }, [t.demoState, lastDemoState, customers, orders, models]);
 
   const current = route.name === 'detail' ? customers.find((c) => c.id === route.id) : null;
   const currentOrder = route.name === 'order' ? orders.find((o) => o.id === route.id) : null;
+  const currentModel = route.name === 'model-edit' ? models.find((m) => m.id === route.id) : null;
 
   const update = (next) => setCustomers((cs) => cs.map((c) => c.id === next.id ? next : c));
   const add = (c) => setCustomers((cs) => [c, ...cs]);
 
   const updateOrder = (next) => setOrders((os) => os.map((o) => o.id === next.id ? next : o));
   const addOrder = (o) => setOrders((os) => [o, ...os]);
+
+  const updateModel = (next) => setModels((ms) => ms.map((m) => m.id === next.id ? next : m));
+  const addModel = (m) => setModels((ms) => [m, ...ms]);
+  const removeModel = (id) => setModels((ms) => ms.filter((m) => m.id !== id));
 
   const goList = () => setRoute({ name: 'list' });
   const goNew = () => setRoute({ name: 'new' });
@@ -140,6 +150,10 @@ const App = () => {
   const goActivity = () => setRoute({ name: 'activity' });
   const goHelp = () => setRoute({ name: 'help' });
   const goFeedback = () => setRoute({ name: 'feedback' });
+  const goAudit = () => setRoute({ name: 'audit' });
+  const goModels = () => setRoute({ name: 'models' });
+  const goNewModel = () => setRoute({ name: 'model-new' });
+  const goEditModel = (id) => setRoute({ name: 'model-edit', id });
 
   const userPageRoutes = ['profile','account','workspaces','activity','help','feedback'];
   const userCrumb = {
@@ -148,6 +162,8 @@ const App = () => {
   };
 
   const inOrdersSection = route.name === 'orders' || route.name === 'order-new' || route.name === 'order';
+  const inModelsSection = route.name === 'models' || route.name === 'model-new' || route.name === 'model-edit';
+  const inDevicesSection = inOrdersSection || inModelsSection;
 
   return (
     <div className="app" data-density={t.density}>
@@ -160,15 +176,21 @@ const App = () => {
         <div className="side__sectionlabel">Manage</div>
         <nav className="side__nav">
           <SidebarItem icon="users" label="Customers" active={route.name === 'list' || route.name === 'new' || route.name === 'detail'} onClick={goList} />
-          <SidebarItem icon="package" label="Orders" active={inOrdersSection} onClick={goOrders} />
-          <SidebarItem icon="file" label="Contracts" />
-          <SidebarItem icon="operator" label="Operators" />
-          <SidebarItem icon="audit" label="Audit log" />
+          <SidebarItem
+            icon="package"
+            label="Devices"
+            active={false}
+            hasActiveChild={inDevicesSection}
+            expanded={expandedMenus.devices}
+            onToggle={() => toggleMenu('devices')}>
+            <SidebarSub label="Sample Orders" active={inOrdersSection} onClick={goOrders} />
+            <SidebarSub label="Device Models" active={inModelsSection} onClick={goModels} />
+          </SidebarItem>
         </nav>
 
         <div className="side__sectionlabel">System</div>
         <nav className="side__nav">
-          <SidebarItem icon="bell" label="Notifications" />
+          <SidebarItem icon="audit" label="Audit log" active={route.name === 'audit'} onClick={goAudit} />
           <SidebarItem icon="settings" label="Settings" active={route.name === 'settings'} onClick={goSettings} />
         </nav>
 
@@ -222,9 +244,31 @@ const App = () => {
                 <span className="crumbs__sep">/</span>
                 <span className="crumbs__current">Roles & Permissions</span>
               </> :
+            route.name === 'audit' ?
+            <>
+                <a onClick={goAudit}>System</a>
+                <span className="crumbs__sep">/</span>
+                <span className="crumbs__current">Audit log</span>
+              </> :
+            inModelsSection ?
+            <>
+                <a onClick={goModels}>Devices</a>
+                <span className="crumbs__sep">/</span>
+                {route.name === 'models' ? (
+                  <span className="crumbs__current">Device Models</span>
+                ) : (
+                  <>
+                    <a onClick={goModels}>Device Models</a>
+                    <span className="crumbs__sep">/</span>
+                    <span className="crumbs__current">{route.name === 'model-new' ? 'New' : (currentModel ? currentModel.name : 'Edit')}</span>
+                  </>
+                )}
+              </> :
             inOrdersSection ?
             <>
-                <a onClick={goOrders}>Orders</a>
+                <a onClick={goOrders}>Devices</a>
+                <span className="crumbs__sep">/</span>
+                <a onClick={goOrders}>Sample Orders</a>
                 {route.name === 'order-new' && <><span className="crumbs__sep">/</span><span className="crumbs__current">New</span></>}
                 {route.name === 'order' && currentOrder && <><span className="crumbs__sep">/</span><span className="crumbs__current" style={{ fontFamily: 'var(--font-family-mono)' }}>{currentOrder.number}</span></>}
               </> :
@@ -239,7 +283,7 @@ const App = () => {
           <div className="topbar__spacer" />
           <button type="button" className="topbar__search" onClick={() => setCmdkOpen(true)}>
             <Icon name="search" size={13} />
-            <span data-comment-anchor="5bbeb0405f-span-109-13">Search…</span>
+            <span>Search…</span>
             <kbd>⌘K</kbd>
           </button>
           <button className="iconbtn"><Icon name="bell" size={15} /></button>
@@ -277,6 +321,23 @@ const App = () => {
           {route.name === 'activity' && <ActivityPage />}
           {route.name === 'help' && <HelpPage onOpenShortcuts={() => setCmdkOpen(true)} />}
           {route.name === 'feedback' && <FeedbackPage />}
+          {route.name === 'audit' && <AuditLogPage />}
+          {route.name === 'models' &&
+          <DeviceModelList
+            models={models}
+            onNew={goNewModel}
+            onEdit={goEditModel}
+            onDelete={(m) => { if (window.confirm(`Delete ${m.name}? This cannot be undone.`)) { removeModel(m.id); toast({ kind: 'success', title: `${m.name} deleted` }); } }} />
+          }
+          {route.name === 'model-new' &&
+          <DeviceModelForm onCancel={goModels} onSave={(m) => { addModel(m); goModels(); }} />
+          }
+          {route.name === 'model-edit' && currentModel &&
+          <DeviceModelForm initial={currentModel} onCancel={goModels} onSave={(m) => { updateModel(m); goModels(); }} />
+          }
+          {route.name === 'model-edit' && !currentModel &&
+          <div className="page"><div className="empty">Device model not found. <a onClick={goModels} style={{ color: 'var(--color-primary-500)', cursor: 'pointer' }}>Back to models</a></div></div>
+          }
         </div>
       </main>
 
@@ -321,7 +382,7 @@ const App = () => {
       <TweaksPanel title="Tweaks">
         <TweakSection label="Demo state" />
         <TweakSelect label="Screen" value={t.demoState}
-        options={['List', 'Wizard', 'Detail', 'Settings', 'Orders', 'New order', 'Order detail', 'Profile', 'Account', 'Workspaces', 'Activity', 'Help', 'Feedback']}
+        options={['List', 'Wizard', 'Detail', 'Settings', 'Orders', 'New order', 'Order detail', 'Device models', 'New model', 'Edit model', 'Profile', 'Account', 'Workspaces', 'Activity', 'Help', 'Feedback', 'Audit log']}
         onChange={(v) => setTweak('demoState', v)} />
 
         <TweakSection label="Appearance" />

@@ -47,11 +47,13 @@ function NavSubItem({ href, label, active }: { href: string; label: string; acti
       href={href}
       className={cn(
         'relative flex items-center pl-5 pr-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-fast',
-        active ? 'text-content-primary' : 'text-content-tertiary hover:bg-surface-hover hover:text-content-primary',
+        active
+          ? 'bg-surface-2 text-content-primary shadow-1'
+          : 'text-content-tertiary hover:bg-surface-hover hover:text-content-primary',
       )}
     >
       {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-3.5 rounded-full bg-primary-500" />
+        <span className="absolute -left-px top-1/2 -translate-y-1/2 w-[3px] h-3.5 rounded-sm bg-primary-500" />
       )}
       {label}
     </Link>
@@ -66,12 +68,11 @@ function NavItemRow({ item, pathname }: { item: SidebarNavItem; pathname: string
   const active = item.href
     ? pathname.startsWith(item.href) && !item.children
     : false
-  const highlighted = active || childActive
 
   const [open, setOpen] = React.useState(childActive)
 
   const iconEl = item.icon && (
-    <span className={highlighted ? 'text-primary-700' : 'text-content-tertiary'}>
+    <span className={active ? 'text-primary-700' : 'text-content-tertiary'}>
       {item.icon}
     </span>
   )
@@ -82,7 +83,12 @@ function NavItemRow({ item, pathname }: { item: SidebarNavItem; pathname: string
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className={cn(itemBase, childActive ? itemActive : itemIdle)}
+          className={cn(
+            itemBase,
+            childActive
+              ? 'text-content-primary hover:bg-surface-hover'
+              : itemIdle,
+          )}
         >
           {iconEl}
           <span className="flex-1">{item.label}</span>

@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Toaster } from 'sonner'
-import { Layout } from '@cloud/ui'
+import { Layout, Toaster } from '@cloud/ui'
 import { Sidebar } from '@/components/layout/sidebar'
 import { ConsoleHeader } from '@/components/layout/console-header'
 import { CommandPalette } from '@/components/layout/command-palette'

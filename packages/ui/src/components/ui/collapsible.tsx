@@ -24,7 +24,7 @@ function CollapsibleTrigger({
     <CollapsiblePrimitive.Trigger
       data-slot="collapsible-trigger"
       className={cn(
-        "flex w-full items-center justify-between p-[10px_14px] text-[13px] font-medium text-content-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-inset cursor-pointer",
+        "flex w-full items-center justify-between py-3 px-4 text-sm font-medium text-content-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-inset cursor-pointer",
         className
       )}
       {...props}
@@ -43,7 +43,7 @@ function CollapsibleContent({
     <CollapsiblePrimitive.Panel
       data-slot="collapsible-content"
       className={cn(
-        "overflow-hidden text-[12px] text-content-secondary px-[14px] pb-3 pt-0",
+        "overflow-hidden text-xs text-content-secondary px-4 pb-3 pt-0",
         className
       )}
       {...props}

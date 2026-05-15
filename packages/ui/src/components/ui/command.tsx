@@ -77,7 +77,7 @@ function CommandInput({
         <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(
-            "w-full text-[13px] placeholder:text-content-tertiary outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+            "w-full text-sm placeholder:text-content-tertiary outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           {...props}
@@ -127,7 +127,7 @@ function CommandGroup({
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        "overflow-hidden p-1 text-content-primary **:[[cmdk-group-heading]]:px-3.5 **:[[cmdk-group-heading]]:py-1 **:[[cmdk-group-heading]]:text-[10.5px] **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-wide **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-content-tertiary",
+        "overflow-hidden p-1 text-content-primary **:[[cmdk-group-heading]]:px-3.5 **:[[cmdk-group-heading]]:py-1 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-wide **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-content-tertiary",
         className
       )}
       {...props}
@@ -157,7 +157,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "group/command-item relative flex cursor-default items-center gap-2.5 rounded-md px-3.5 py-2 text-[13px] text-content-primary outline-hidden select-none data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-50 data-selected:bg-surface-hover [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "group/command-item relative flex cursor-default items-center gap-2.5 rounded-md px-3.5 py-2 text-sm text-content-primary outline-hidden select-none data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-50 data-selected:bg-surface-hover [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border p-[12px_14px] has-[>svg]:grid has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:size-3.5 *:[svg]:mt-0.5 *:[svg]:shrink-0",
+  "relative w-full rounded-lg border py-3 px-4 has-[>svg]:grid has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:size-3.5 *:[svg]:mt-0.5 *:[svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -42,7 +42,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="alert-title"
       className={cn(
-        "text-[13px] font-semibold leading-tight group-has-[>svg]/alert:col-start-2",
+        "text-sm font-semibold leading-tight group-has-[>svg]/alert:col-start-2",
         className
       )}
       {...props}
@@ -55,7 +55,7 @@ function AlertDescription({ className, ...props }: React.ComponentProps<"div">) 
     <div
       data-slot="alert-description"
       className={cn(
-        "text-[12px] text-content-secondary mt-0.5 group-has-[>svg]/alert:col-start-2",
+        "text-xs text-content-secondary mt-0.5 group-has-[>svg]/alert:col-start-2",
         className
       )}
       {...props}

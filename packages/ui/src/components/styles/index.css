@@ -141,12 +141,16 @@
   --ease-emphasized:  cubic-bezier(0.3, 0, 0, 1);
 
   /* ─── Control sizing → h-control-*, px-cx-* ─── */
+  --spacing-control-xs: 22px;
   --spacing-control-sm: 28px;
   --spacing-control-md: 36px;
   --spacing-control-lg: 44px;
   --spacing-cx-sm: 10px;
   --spacing-cx-md: 14px;
   --spacing-cx-lg: 18px;
+
+  /* ─── Container max-widths → max-w-* ─── */
+  --container-content: 1200px;
 
   /* ─── Breakpoints ─── */
   --breakpoint-xs:  480px;

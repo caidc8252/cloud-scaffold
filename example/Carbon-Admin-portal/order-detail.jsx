@@ -1,6 +1,6 @@
 /* global React, Btn, Input, Field, Icon, Badge, CompanyLogo, Modal, useToast,
    fmtDate, fmtDateTime, relTime,
-   DEVICE_MODELS, ORDER_STATUS_TONE,
+   DEVICE_MODELS, ModelTile, ORDER_STATUS_TONE,
    orderSubtotal, orderTotal, orderQty, deviceProgress, moneyUSD,
    fakeSN, fakeAC */
 const { useState, useMemo } = React;
@@ -496,12 +496,7 @@ const LineActivationCard = ({ item, onItemUpdate, expanded, onToggle, readonly }
           width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px',
           background: 'var(--color-bg-2)', border: 0, borderBottom: expanded ? '1px solid var(--color-border-subtle)' : 'none', cursor: 'pointer', textAlign: 'left',
         }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 8, background: allDone ? 'oklch(95% 0.05 150)' : 'oklch(96% 0.04 80)', color: allDone ? 'var(--color-success-700)' : 'var(--color-warning-700)',
-          display: 'grid', placeItems: 'center', flex: 'none',
-        }}>
-          <Icon name="pos" size={18}/>
-        </div>
+        <ModelTile model={DEVICE_MODELS.find(x => x.id === item.modelId) || { name: item.modelName, image: null }} px={35}/>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 600, fontSize: 14.5, letterSpacing: '-0.005em' }}>{item.modelName}</div>
           <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>

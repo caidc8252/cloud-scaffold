@@ -27,7 +27,17 @@ function buildCrumbs(pathname: string, customerName?: string): BreadcrumbItemDef
       { label: customerName ?? '…' },
     ]
   }
-  if (pathname === '/orders') return [{ label: 'Orders' }]
+  if (pathname === '/devices/orders') return [{ label: 'Devices' }, { label: 'Sample Orders' }]
+  if (pathname === '/devices/orders/new') return [
+    { label: 'Devices' },
+    { label: 'Sample Orders', href: '/devices/orders' },
+    { label: 'New' },
+  ]
+  if (pathname.startsWith('/devices/orders/')) return [
+    { label: 'Devices' },
+    { label: 'Sample Orders', href: '/devices/orders' },
+    { label: '…' },
+  ]
   if (pathname === '/settings') return [{ label: 'Settings' }]
   return [{ label: 'Dashboard' }]
 }

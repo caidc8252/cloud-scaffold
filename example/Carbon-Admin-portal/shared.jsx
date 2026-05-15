@@ -39,6 +39,11 @@ const Icon = ({ name, size = 16, ...rest }) => {
     minus:        <g {...stroke}><path d="M5 12h14"/></g>,
     gift:         <g {...stroke}><rect x="3.5" y="9" width="17" height="5"/><path d="M5 14v7h14v-7M12 9v12M12 9c-2 0-4-1-4-3a2 2 0 0 1 4 0c0 2 2 3 4 3a2 2 0 1 0-4-3"/></g>,
     sparkles:     <g {...stroke}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></g>,
+    monitor:      <g {...stroke}><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6M12 17v4"/></g>,
+    upload:       <g {...stroke}><path d="M12 4v12M7 9l5-5 5 5M5 20h14"/></g>,
+    image:        <g {...stroke}><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m3 17 5-5 4 4 3-3 6 6"/></g>,
+    rotate:       <g {...stroke}><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5"/></g>,
+    cpu:          <g {...stroke}><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></g>,
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" {...rest}>{paths[name] || null}</svg>;
 };

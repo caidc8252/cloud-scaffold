@@ -40,9 +40,9 @@ function Input({
       data-slot="input"
       aria-invalid={resolvedInvalid || undefined}
       className={cn(
-        "h-control-md w-full min-w-0 rounded-md border border-line-default bg-transparent px-cx-md py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-content-tertiary focus-visible:border-line-focus focus-visible:ring-2 focus-visible:ring-line-focus/30 disabled:cursor-not-allowed disabled:bg-surface-3 disabled:opacity-50 aria-invalid:border-error-strong aria-invalid:ring-2 aria-invalid:ring-error/20 md:text-sm dark:bg-surface-3/30 dark:disabled:bg-surface-3/80 dark:aria-invalid:border-error-strong/50 dark:aria-invalid:ring-error/40",
+        "h-control-md w-full min-w-0 rounded-md border border-line-default bg-white px-cx-md py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-content-tertiary focus-visible:border-line-focus focus-visible:ring-2 focus-visible:ring-line-focus/30 disabled:cursor-not-allowed disabled:bg-surface-3 disabled:opacity-50 aria-invalid:border-error-strong aria-invalid:ring-2 aria-invalid:ring-error/20 md:text-sm dark:bg-surface-3/30 dark:disabled:bg-surface-3/80 dark:aria-invalid:border-error-strong/50 dark:aria-invalid:ring-error/40",
         inputSize && inputSizeClass[inputSize],
-        (prefix || suffix) && "rounded-none border-0 focus-visible:ring-0",
+        (prefix || suffix) && "rounded-none border-0 bg-transparent focus-visible:ring-0 dark:bg-transparent",
         className
       )}
       {...props}

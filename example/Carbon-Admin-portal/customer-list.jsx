@@ -137,7 +137,6 @@ const CustomerList = ({ customers, onOpen, onNew }) => {
                 </td>
                 <td>
                   <div style={{ fontSize: 13.5 }}>{fmtDate(c.registeredAt)}</div>
-                  <div className="cust-meta">{c.operators.length} operator{c.operators.length === 1 ? '' : 's'}</div>
                 </td>
                 <td>
                   <div className="badge-row">

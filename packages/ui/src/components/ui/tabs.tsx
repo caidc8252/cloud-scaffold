@@ -25,7 +25,7 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        default: "h-control-sm gap-1 rounded-md p-[3px] bg-surface-3",
+        default: "h-control-sm gap-1 rounded-md p-1 bg-surface-3",
         line: "gap-1 shadow-[inset_0_-1px_0_var(--color-line-default)]",
       },
     },

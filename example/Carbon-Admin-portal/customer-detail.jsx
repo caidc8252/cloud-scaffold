@@ -59,25 +59,6 @@ const TabOverview = ({ customer, onSave }) => {
             )}
           </div>
         </div>
-
-        <div className="info-card">
-          <div className="info-card__head"><div className="info-card__title">Contracts</div></div>
-          <div>
-            {customer.contracts.length === 0 ? <div className="empty">No contracts yet.</div> :
-              customer.contracts.map((c, i) => (
-                <div key={i} className="crow">
-                  <div className={`pick-card__icon pick-card__icon--${c.kind.toLowerCase()}`} style={{ width: 36, height: 36, borderRadius: 8 }}>
-                    <Icon name={c.kind === 'ISV' ? 'file' : c.kind === 'ISO' ? 'shield' : c.kind === 'Acquirer' ? 'check' : 'link'} size={16}/>
-                  </div>
-                  <div className="crow__main">
-                    <div className="crow__title">{c.kind} <ContractBadge kind={c.status} status={c.status}/></div>
-                    <div className="crow__sub">{c.signedAt ? `Signed ${fmtDate(c.signedAt)} · by ${maskEmail(c.signedBy)}` : 'Awaiting customer admin signature'}</div>
-                  </div>
-                </div>
-              ))
-            }
-          </div>
-        </div>
       </div>
 
       <div className="stack" style={{ gap: 14 }}>
@@ -847,6 +828,8 @@ const TabRoles = ({ customer, onUpdate }) => {
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null); // custom role being edited
   const [confirmDel, setConfirmDel] = useState(null);
+  const [blockConfirm, setBlockConfirm] = useState(null);
+  const [permsPreview, setPermsPreview] = useState(null);
 
   const activeKinds = customer.contracts
     .filter(c => c.status === 'Active' || c.status === 'Signed' || c.status === 'Pending')
@@ -956,7 +939,10 @@ const TabRoles = ({ customer, onUpdate }) => {
                   </div>
                   <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{r.description}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-                    <span className="muted" style={{ fontSize: 11.5 }}>{r.permissions.length} permissions</span>
+                    <button type="button" className="perm-link" onClick={() => setPermsPreview(r)}>
+                      {r.permissions.length} permissions
+                      <Icon name="eye" size={11}/>
+                    </button>
                     <span className="dot">·</span>
                     <span className="muted" style={{ fontSize: 11.5 }}>Scope:</span>
                     {r._scope.map(k => (
@@ -964,7 +950,7 @@ const TabRoles = ({ customer, onUpdate }) => {
                     ))}
                   </div>
                 </div>
-                <Btn variant={isDenied ? 'primary' : 'ghost'} size="sm" icon={isDenied ? 'check' : 'x'} onClick={() => toggleDeny(r.id, r.name)}>
+                <Btn variant={isDenied ? 'primary' : 'ghost'} size="sm" icon={isDenied ? 'check' : 'x'} onClick={() => isDenied ? toggleDeny(r.id, r.name) : setBlockConfirm({ rid: r.id, name: r.name })}>
                   {isDenied ? 'Unblock' : 'Block'}
                 </Btn>
               </div>
@@ -1001,7 +987,10 @@ const TabRoles = ({ customer, onUpdate }) => {
                 </div>
                 <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{r.description || 'No description'}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-                  <span className="muted" style={{ fontSize: 11.5 }}>{r.permissions.length} permissions</span>
+                  <button type="button" className="perm-link" onClick={() => setPermsPreview(r)}>
+                    {r.permissions.length} permissions
+                    <Icon name="eye" size={11}/>
+                  </button>
                   {(r.contractsAllowed || []).length > 0 && <>
                     <span className="dot">·</span>
                     <span className="muted" style={{ fontSize: 11.5 }}>Scope:</span>
@@ -1036,6 +1025,82 @@ const TabRoles = ({ customer, onUpdate }) => {
         <p style={{ margin: 0, fontSize: 13.5 }}>
           <strong>{confirmDel?.name}</strong> will be removed from this customer. Operators using it will fall back to <strong>Viewer</strong>.
         </p>
+      </Modal>
+
+      <Modal open={!!blockConfirm} onClose={() => setBlockConfirm(null)} title="Block this role?" width={440}
+        footer={<>
+          <Btn variant="ghost" size="sm" onClick={() => setBlockConfirm(null)}>Cancel</Btn>
+          <Btn variant="danger" size="sm" icon="x" onClick={() => { toggleDeny(blockConfirm.rid, blockConfirm.name); setBlockConfirm(null); }}>Block role</Btn>
+        </>}>
+        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55 }}>
+          Blocking <strong>{blockConfirm?.name}</strong> means it can no longer be assigned to any operator at <strong>{customer.name}</strong>. Operators currently holding this role will lose access immediately.
+        </p>
+        <div className="notice" style={{ marginTop: 14 }}>
+          <Icon name="info" size={14}/>
+          <span>You can unblock the role at any time — no data is deleted.</span>
+        </div>
+      </Modal>
+
+      <Modal open={!!permsPreview} onClose={() => setPermsPreview(null)} title={permsPreview ? `${permsPreview.name} — permissions` : ''} width={560}
+        footer={<>
+          <Btn variant="ghost" size="sm" onClick={() => setPermsPreview(null)}>Close</Btn>
+        </>}>
+        {permsPreview && (() => {
+          const ownedIds = new Set(permsPreview.permissions || []);
+          const ownedScope = (permsPreview._scope && permsPreview._scope.length
+            ? permsPreview._scope
+            : (permsPreview.contractsAllowed || []).filter(k => activeKinds.includes(k)));
+          // Group all owned permissions under PERMISSION_GROUPS structure
+          const grouped = PERMISSION_GROUPS.map(g => ({
+            ...g,
+            items: g.items.filter(it => ownedIds.has(it.id)),
+          })).filter(g => g.items.length > 0);
+          return (
+            <div>
+              <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', marginBottom: 12, lineHeight: 1.5 }}>
+                {permsPreview.description || 'System-defined role.'}
+              </div>
+              {ownedScope.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+                  <span className="muted" style={{ fontSize: 11.5 }}>Effective on this customer:</span>
+                  {ownedScope.map(k => <span key={k} className={`perm-chip perm-chip--${k.toLowerCase()}`}>{k}</span>)}
+                </div>
+              )}
+              {grouped.length === 0 && <div className="empty">No permissions granted.</div>}
+              <div className="perm-preview">
+                {grouped.map(g => (
+                  <div key={g.id} className="perm-preview__group">
+                    <div className="perm-preview__grouphead">
+                      <span>{g.label}</span>
+                      <span className="perm-preview__count">{g.items.length}</span>
+                    </div>
+                    <ul className="perm-preview__list">
+                      {g.items.map(it => (
+                        <li key={it.id} className="perm-preview__item">
+                          <div className="perm-preview__check"><Icon name="check" size={11}/></div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div className="perm-preview__lbl">
+                              {it.label}
+                              <code className="perm-preview__id">{it.id}</code>
+                            </div>
+                            <div className="perm-preview__desc">{it.desc}</div>
+                            {it.contracts && (
+                              <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                                {it.contracts.map(k => (
+                                  <span key={k} className={`perm-chip perm-chip--${k.toLowerCase()}`} style={{ opacity: ownedScope.includes(k) ? 1 : 0.35 }}>{k}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

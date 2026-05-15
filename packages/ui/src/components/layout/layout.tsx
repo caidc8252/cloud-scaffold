@@ -4,7 +4,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 // Full-page shell: fixed-height viewport with optional sidebar (w-62) and sticky header (h-14).
-// Pass sidebar and header as named slots. Content area is max-w-[1200px] centered with px-8 pt-7 pb-16.
+// Pass sidebar and header as named slots. Content area is max-w-content centered with px-8 pt-7 pb-16.
 export const Layout: React.FC<{
   sidebar?: React.ReactNode
   header?: React.ReactNode
@@ -24,7 +24,7 @@ export const Layout: React.FC<{
         </header>
       )}
       <main className="flex-1 overflow-y-auto bg-surface-1">
-        <div className="mx-auto w-full max-w-[1200px] px-8 pt-7 pb-16">
+        <div className="mx-auto w-full max-w-content px-8 pt-7 pb-16">
           {children}
         </div>
       </main>

@@ -19,7 +19,7 @@ function Avatar({
         size === "xl" && "size-12",
         size === "lg" && "size-9",
         size === "md" && "size-7",
-        size === "sm" && "size-[22px]",
+        size === "sm" && "size-control-xs",
         className
       )}
       {...props}
@@ -43,7 +43,7 @@ function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props)
       data-slot="avatar-fallback"
       className={cn(
         "flex size-full items-center justify-center rounded-full bg-[var(--color-brand-mono)] text-content-inverse font-semibold",
-        "group-data-[size=xl]/avatar:text-base group-data-[size=lg]/avatar:text-sm group-data-[size=md]/avatar:text-xs group-data-[size=sm]/avatar:text-[9.5px]",
+        "group-data-[size=xl]/avatar:text-base group-data-[size=lg]/avatar:text-sm group-data-[size=md]/avatar:text-xs group-data-[size=sm]/avatar:text-xs",
         className
       )}
       {...props}

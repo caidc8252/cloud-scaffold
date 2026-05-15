@@ -32,9 +32,9 @@ function Empty({
           {icon}
         </div>
       )}
-      <p className="text-[13px] font-medium text-content-primary">{title}</p>
+      <p className="text-sm font-medium text-content-primary">{title}</p>
       {description && (
-        <p className="text-[12px] text-content-tertiary">{description}</p>
+        <p className="text-xs text-content-tertiary">{description}</p>
       )}
       {action && <div className="mt-1">{action}</div>}
     </div>

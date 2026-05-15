@@ -1,5 +1,5 @@
 /* global React, Btn, Input, Field, Textarea, Select, Icon, Badge, CompanyLogo, useToast,
-   DEVICE_MODELS, moneyUSD, orderSubtotal, orderTotal, emptyDevices */
+   DEVICE_MODELS, ModelTile, moneyUSD, orderSubtotal, orderTotal, emptyDevices */
 const { useState, useMemo } = React;
 
 // ─── Stepper (re-uses .stepper classes from main stylesheet) ────────────────
@@ -115,9 +115,7 @@ const ModelRow = ({ item, onChange, onRemove }) => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px 110px 110px 32px', gap: 12, alignItems: 'center', padding: '14px 16px', background: 'var(--color-bg-2)', border: '1px solid var(--color-border-default)', borderRadius: 10 }}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 10, background: 'oklch(96% 0.04 80)', color: 'var(--color-warning-700)', display: 'grid', placeItems: 'center', flex: 'none' }}>
-          <Icon name="pos" size={22}/>
-        </div>
+        <ModelTile model={model} px={55}/>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontWeight: 600, fontSize: 14, letterSpacing: '-0.005em' }}>{model.name}</div>
           <div className="cust-meta" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.family} · {moneyUSD(model.unitPrice)} ea</div>
@@ -192,9 +190,7 @@ const StepModels = ({ items, setItems }) => {
               {available.map(m => (
                 <button key={m.id} onClick={() => addModel(m.id)}
                   className="role-item" style={{ borderRadius: 8, borderBottom: 'none', background: 'var(--color-bg-2)', border: '1px solid var(--color-border-default)' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'oklch(96% 0.04 80)', color: 'var(--color-warning-700)', display: 'grid', placeItems: 'center', flex: 'none' }}>
-                    <Icon name="pos" size={18}/>
-                  </div>
+                  <ModelTile model={m} px={35}/>
                   <div className="role-item__main">
                     <div className="role-item__name">{m.name}</div>
                     <div className="role-item__meta">{m.family} · {moneyUSD(m.unitPrice)} ea</div>

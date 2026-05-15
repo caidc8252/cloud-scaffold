@@ -77,7 +77,7 @@ function ContextMenuLabel({
       data-slot="context-menu-label"
       data-inset={inset}
       className={cn(
-        "px-2.5 py-1 text-[10.5px] uppercase tracking-wide font-medium text-content-tertiary data-inset:pl-7",
+        "px-2.5 py-1 text-xs uppercase tracking-wide font-medium text-content-tertiary data-inset:pl-7",
         className
       )}
       {...props}
@@ -100,7 +100,7 @@ function ContextMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "group/context-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-2.5 py-[7px] text-[12.5px] text-content-primary outline-hidden select-none focus:bg-surface-hover data-inset:pl-7 data-[variant=destructive]:text-error-strong data-[variant=destructive]:focus:bg-error-bg data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+        "group/context-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-2.5 py-2 text-xs text-content-primary outline-hidden select-none focus:bg-surface-hover data-inset:pl-7 data-[variant=destructive]:text-error-strong data-[variant=destructive]:focus:bg-error-bg data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className
       )}
       {...props}
@@ -127,7 +127,7 @@ function ContextMenuSubTrigger({
       data-slot="context-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "flex cursor-default items-center gap-1.5 rounded-md px-2.5 py-[7px] text-[12.5px] text-content-primary outline-hidden select-none focus:bg-surface-hover data-inset:pl-7 data-open:bg-surface-hover [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+        "flex cursor-default items-center gap-1.5 rounded-md px-2.5 py-2 text-xs text-content-primary outline-hidden select-none focus:bg-surface-hover data-inset:pl-7 data-open:bg-surface-hover [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className
       )}
       {...props}

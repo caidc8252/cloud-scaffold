@@ -45,13 +45,13 @@ function ToggleCheckbox({
         onCheckedChange={onCheckedChange}
         data-slot="checkbox"
         className={cn(
-          "peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input transition-colors outline-none cursor-pointer after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:bg-input/30 dark:data-checked:bg-primary",
+          "peer relative flex size-4 shrink-0 items-center justify-center rounded-sm border border-line-strong bg-surface-2 transition-colors outline-none cursor-pointer after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:bg-input/30 dark:data-checked:bg-primary",
           className
         )}
       >
         <CheckboxPrimitive.Indicator
           data-slot="checkbox-indicator"
-          className="grid place-content-center text-current transition-none [&>svg]:size-3.5"
+          className="grid place-content-center text-current transition-none [&>svg]:size-2.5"
         >
           <CheckIcon />
         </CheckboxPrimitive.Indicator>
@@ -112,7 +112,7 @@ function ToggleRadio({
         disabled={disabled}
         data-slot="radio-group-item"
         className={cn(
-          "group/radio relative flex aspect-square size-4 shrink-0 rounded-full border border-input outline-none cursor-pointer after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary",
+          "group/radio relative flex aspect-square size-4 shrink-0 rounded-full border border-line-strong bg-surface-2 outline-none cursor-pointer after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary",
           className
         )}
       >
@@ -120,7 +120,7 @@ function ToggleRadio({
           data-slot="radio-group-indicator"
           className="flex size-4 items-center justify-center"
         >
-          <span className="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-foreground" />
+          <span className="absolute top-1/2 left-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-foreground" />
         </RadioPrimitive.Indicator>
       </RadioPrimitive.Root>
       {label && <Label htmlFor={inputId}>{label}</Label>}
@@ -141,7 +141,7 @@ interface ToggleSwitchProps {
   className?: string
 }
 
-// Toggle switch with optional inline label. size: 'sm'(24×14px)|'default'(32×18px). Supports controlled and uncontrolled modes.
+// Toggle switch with optional inline label. size: 'sm'(24×14px)|'default'(36×20px). Supports controlled and uncontrolled modes.
 function ToggleSwitch({
   id,
   label,
@@ -165,13 +165,13 @@ function ToggleSwitch({
         data-slot="switch"
         data-size={size}
         className={cn(
-          "peer group/switch relative inline-flex shrink-0 items-center rounded-full border border-transparent transition-all outline-none cursor-pointer after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 data-[size=default]:h-[18.4px] data-[size=default]:w-[32px] data-[size=sm]:h-[14px] data-[size=sm]:w-[24px] data-checked:bg-primary data-unchecked:bg-input dark:data-unchecked:bg-input/80 data-disabled:cursor-not-allowed data-disabled:opacity-50",
+          "peer group/switch relative inline-flex shrink-0 items-center rounded-full border border-transparent transition-all outline-none cursor-pointer after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:shadow-focus data-[size=default]:h-5 data-[size=default]:w-9 data-[size=sm]:h-3.5 data-[size=sm]:w-6 data-unchecked:bg-line-strong data-checked:bg-primary data-checked:shadow-cta data-checked:hover:bg-primary-600 dark:data-unchecked:bg-input/80 data-disabled:cursor-not-allowed data-disabled:opacity-50",
           className
         )}
       >
         <SwitchPrimitive.Thumb
           data-slot="switch-thumb"
-          className="pointer-events-none block rounded-full bg-background ring-0 transition-transform group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3 group-data-[size=default]/switch:data-checked:translate-x-[calc(100%-2px)] group-data-[size=sm]/switch:data-checked:translate-x-[calc(100%-2px)] dark:data-checked:bg-primary-foreground group-data-[size=default]/switch:data-unchecked:translate-x-0 group-data-[size=sm]/switch:data-unchecked:translate-x-0 dark:data-unchecked:bg-foreground"
+          className="pointer-events-none block rounded-full bg-background ring-0 transition-transform shadow-[0_1px_2px_oklch(0%_0_0/0.18),0_0_0_0.5px_oklch(0%_0_0/0.08)] group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3 group-data-[size=default]/switch:data-checked:translate-x-4 group-data-[size=sm]/switch:data-checked:translate-x-2.5 group-data-[size=default]/switch:data-unchecked:translate-x-0 group-data-[size=sm]/switch:data-unchecked:translate-x-0 dark:data-checked:bg-primary-foreground dark:data-unchecked:bg-foreground"
         />
       </SwitchPrimitive.Root>
       {label && <Label htmlFor={inputId}>{label}</Label>}

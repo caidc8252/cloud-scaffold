@@ -1,6 +1,6 @@
-/* global React, Btn, Input, Icon, Badge, CompanyLogo, fmtDate, fmtDateTime, relTime,
+/* global React, Btn, Input, Icon, Badge, CompanyLogo, ModelTile, fmtDate, fmtDateTime, relTime,
    SEED_ORDERS, ORDER_STATUSES, ORDER_STATUS_TONE,
-   orderTotal, orderQty, orderSubtotal, deviceProgress, moneyUSD */
+   orderTotal, orderQty, orderSubtotal, deviceProgress, moneyUSD, DEVICE_MODELS */
 const { useState, useMemo } = React;
 
 const OrderList = ({ orders, onOpen, onNew }) => {
@@ -152,16 +152,20 @@ const OrderList = ({ orders, onOpen, onNew }) => {
                     </div>
                   </td>
                   <td>
-                    {o.items.slice(0, 2).map((i, idx) => (
-                      <div key={idx} style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
-                        <span style={{ color: 'var(--color-text-primary)', fontWeight: 500 }}>{i.modelName}</span>
-                        <span style={{ marginLeft: 6 }}>× {i.qty}</span>
-                      </div>
-                    ))}
+                    {o.items.slice(0, 2).map((i, idx) => {
+                      const mm = DEVICE_MODELS.find(x => x.id === i.modelId) || { name: i.modelName, image: null };
+                      return (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--color-text-secondary)', marginBottom: idx === 0 && o.items.length > 1 ? 4 : 0 }}>
+                          <ModelTile model={mm} px={35}/>
+                          <span style={{ color: 'var(--color-text-primary)', fontWeight: 500 }}>{i.modelName}</span>
+                          <span style={{ marginLeft: 2 }}>× {i.qty}</span>
+                        </div>
+                      );
+                    })}
                     {o.items.length > 2 ? (
-                      <div className="cust-meta">+{o.items.length - 2} more · {orderQty(o)} units total</div>
+                      <div className="cust-meta" style={{ marginTop: 4 }}>+{o.items.length - 2} more · {orderQty(o)} units total</div>
                     ) : o.items.length > 1 ? (
-                      <div className="cust-meta">{orderQty(o)} units total</div>
+                      <div className="cust-meta" style={{ marginTop: 4 }}>{orderQty(o)} units total</div>
                     ) : null}
                   </td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }} className="num">

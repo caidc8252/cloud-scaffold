@@ -41,7 +41,7 @@ function ResizableHandle({
       {...props}
     >
       {withHandle && (
-        <div className="z-10 flex h-6 w-[7px] shrink-0 rounded-sm bg-line-strong" />
+        <div className="z-10 flex h-6 w-2 shrink-0 rounded-sm bg-line-strong" />
       )}
     </ResizablePrimitive.PanelResizeHandle>
   )
