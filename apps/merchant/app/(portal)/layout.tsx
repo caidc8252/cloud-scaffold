@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Layout, Toaster } from '@cloud/ui'
 import { Sidebar } from '@/components/layout/sidebar'
-import { ConsoleHeader } from '@/components/layout/console-header'
+import { PortalHeader } from '@/components/layout/portal-header'
 import { CommandPalette } from '@/components/layout/command-palette'
 
-export default function ConsoleLayout({ children }: { children: React.ReactNode }) {
+export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const [cmdkOpen, setCmdkOpen] = useState(false)
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function ConsoleLayout({ children }: { children: React.ReactNode 
     <>
       <Layout
         sidebar={<Sidebar />}
-        header={<ConsoleHeader onSearchClick={() => setCmdkOpen(true)} />}
+        header={<PortalHeader onSearchClick={() => setCmdkOpen(true)} />}
       >
         {children}
       </Layout>

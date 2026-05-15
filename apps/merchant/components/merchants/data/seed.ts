@@ -1,0 +1,120 @@
+import type { Merchant } from './types'
+
+type RawMerchant = Omit<Merchant, 'mid' | 'updatedAt' | 'stores' | 'terminals'> & {
+  stores: Array<Omit<Merchant['stores'][number], 'createdAt' | 'updatedAt'> & { createdAt?: string; updatedAt?: string }>
+  terminals: Array<Omit<Merchant['terminals'][number], 'createdAt' | 'updatedAt' | 'tid'> & { createdAt?: string; updatedAt?: string; tid?: string }>
+}
+
+export const MERCHANTS_SEED: RawMerchant[] = [
+  {
+    id: 'm-coffee',
+    name: 'Riverside Coffee Co.',
+    country: 'Canada',
+    tags: ['F&B', 'Multi-location', 'VIP'],
+    notes: '12-location coffee chain. Pilot for the new offline-tip flow. Primary contact: Sandra Vu.',
+    createdAt: 'Jan 14, 2024',
+    stores: [
+      { id: 's-coffee-hq', name: 'Riverside Coffee Co.', isHQ: true, address: '402 St-Laurent Blvd, Montréal, QC H2W 1S5', country: 'Canada', notes: 'Corporate office + flagship store.' },
+      { id: 's-coffee-pln', name: 'Plateau Roastery', isHQ: false, address: '5640 Av du Parc, Montréal, QC H2V 4H1', country: 'Canada', notes: 'Higher tip volume on weekends.' },
+      { id: 's-coffee-old', name: 'Old Port Kiosk', isHQ: false, address: '10 Rue de la Commune E, Montréal, QC H2Y 4B1', country: 'Canada', notes: 'Seasonal — closed Dec–Feb.' },
+    ],
+    terminals: [
+      { sn: 'N950-0014-9281', model: 'N950', storeId: 's-coffee-hq', state: 'active', lastSeen: '5 min ago' },
+      { sn: 'N950-0014-9282', model: 'N950', storeId: 's-coffee-hq', state: 'active', lastSeen: '2 min ago' },
+      { sn: 'S90-0822-0014', model: 'S90', storeId: 's-coffee-hq', state: 'active', lastSeen: '12 min ago' },
+      { sn: 'N950-0014-9311', model: 'N950', storeId: 's-coffee-pln', state: 'active', lastSeen: '1 min ago' },
+      { sn: 'N950-0014-9312', model: 'N950', storeId: 's-coffee-pln', state: 'active', lastSeen: '8 min ago' },
+      { sn: 'S60-0488-0021', model: 'S60', storeId: 's-coffee-pln', state: 'active', lastSeen: '3 days ago' },
+      { sn: 'N750-0099-0040', model: 'N750', storeId: 's-coffee-old', state: 'active', lastSeen: '4 hours ago' },
+      { sn: null, model: null, storeId: 's-coffee-hq', state: 'pending', lastSeen: '—', tid: 'T0099101' },
+      { sn: null, model: null, storeId: 's-coffee-pln', state: 'pending', lastSeen: '—', tid: 'T0099102' },
+      { sn: null, model: null, storeId: 's-coffee-pln', state: 'pending', lastSeen: '—', tid: 'T0099103' },
+      { sn: null, model: null, storeId: 's-coffee-old', state: 'pending', lastSeen: '—', tid: 'T0099104' },
+    ],
+  },
+  {
+    id: 'm-pharma',
+    name: 'Cedar Park Pharmacy',
+    country: 'Canada',
+    tags: ['Healthcare', 'Single-location'],
+    notes: '',
+    createdAt: 'Mar 02, 2024',
+    stores: [
+      { id: 's-pharma-hq', name: 'Cedar Park Pharmacy', isHQ: true, address: '1284 Whyte Ave NW, Edmonton, AB T6E 1Z2', country: 'Canada', notes: 'Open 7 days.' },
+    ],
+    terminals: [
+      { sn: 'S90-0822-1102', model: 'S90', storeId: 's-pharma-hq', state: 'active', lastSeen: '1 min ago' },
+      { sn: 'S60-0488-0177', model: 'S60', storeId: 's-pharma-hq', state: 'active', lastSeen: '9 min ago' },
+    ],
+  },
+  {
+    id: 'm-bistro',
+    name: 'Cascade Bistro Group',
+    country: 'Canada',
+    tags: ['F&B', 'Multi-location'],
+    notes: 'Three locations across BC. Tip-out reports needed monthly.',
+    createdAt: 'Sep 21, 2023',
+    stores: [
+      { id: 's-bistro-hq', name: 'Cascade Bistro Group', isHQ: true, address: '1490 Robson St, Vancouver, BC V6G 1B7', country: 'Canada', notes: 'Head office + Robson dining room.' },
+      { id: 's-bistro-pmt', name: 'Port Moody Bistro', isHQ: false, address: '3107 St Johns St, Port Moody, BC V3H 2C5', country: 'Canada', notes: '' },
+    ],
+    terminals: [
+      { sn: 'N950-0014-3322', model: 'N950', storeId: 's-bistro-hq', state: 'active', lastSeen: 'just now' },
+      { sn: 'N950-0014-3323', model: 'N950', storeId: 's-bistro-hq', state: 'active', lastSeen: '7 min ago' },
+      { sn: null, model: null, storeId: 's-bistro-hq', state: 'pending', lastSeen: '—', tid: 'T0102201' },
+      { sn: 'N950-0014-3401', model: 'N950', storeId: 's-bistro-pmt', state: 'active', lastSeen: '31 min ago' },
+    ],
+  },
+  {
+    id: 'm-books',
+    name: 'Trillium Books',
+    country: 'Canada',
+    tags: ['Retail'],
+    notes: 'Independent bookstore. Single till.',
+    createdAt: 'Apr 18, 2024',
+    stores: [
+      { id: 's-books-hq', name: 'Trillium Books', isHQ: true, address: '92 Bloor St W, Toronto, ON M5S 1M2', country: 'Canada', notes: '' },
+    ],
+    terminals: [{ sn: 'S60-0488-2299', model: 'S60', storeId: 's-books-hq', state: 'active', lastSeen: '22 min ago' }],
+  },
+  {
+    id: 'm-glacier',
+    name: 'Glacier Grocers',
+    country: 'Canada',
+    tags: ['Retail', 'Multi-location', 'Enterprise'],
+    notes: 'Large grocery chain across BC and Alberta. SLA 24h support.',
+    createdAt: 'Aug 04, 2023',
+    stores: [
+      { id: 's-glacier-hq', name: 'Glacier Grocers', isHQ: true, address: '100 W Pender St, Vancouver, BC V6B 1R8', country: 'Canada', notes: 'Head office.' },
+      { id: 's-glacier-bby', name: 'Burnaby Mega', isHQ: false, address: '4400 Hastings St, Burnaby, BC V5C 2K1', country: 'Canada', notes: '' },
+      { id: 's-glacier-ric', name: 'Richmond Pavilion', isHQ: false, address: '5300 No 3 Rd, Richmond, BC V6X 2X9', country: 'Canada', notes: '' },
+      { id: 's-glacier-cal', name: 'Calgary Beltline', isHQ: false, address: '1234 17 Ave SW, Calgary, AB T2T 0C8', country: 'Canada', notes: '' },
+      { id: 's-glacier-van-com', name: 'Vancouver Commercial Drive', isHQ: false, address: '1850 Commercial Dr, Vancouver, BC V5N 4A6', country: 'Canada', notes: '' },
+      { id: 's-glacier-van-kit', name: 'Vancouver Kitsilano', isHQ: false, address: '2150 W 4th Ave, Vancouver, BC V6K 1N6', country: 'Canada', notes: '' },
+      { id: 's-glacier-van-dt', name: 'Vancouver Downtown', isHQ: false, address: '555 Robson St, Vancouver, BC V6B 2B7', country: 'Canada', notes: '' },
+      { id: 's-glacier-sur', name: 'Surrey Central', isHQ: false, address: '10153 King George Blvd, Surrey, BC V3T 2W1', country: 'Canada', notes: '' },
+      { id: 's-glacier-coq', name: 'Coquitlam Centre', isHQ: false, address: '2929 Barnet Hwy, Coquitlam, BC V3B 5R5', country: 'Canada', notes: '' },
+      { id: 's-glacier-vic', name: 'Victoria Inner Harbour', isHQ: false, address: '950 Government St, Victoria, BC V8W 1X1', country: 'Canada', notes: '' },
+      { id: 's-glacier-nan', name: 'Nanaimo Country Club', isHQ: false, address: '3200 N Island Hwy, Nanaimo, BC V9T 1W1', country: 'Canada', notes: '' },
+      { id: 's-glacier-kel', name: 'Kelowna Orchard Park', isHQ: false, address: '2271 Harvey Ave, Kelowna, BC V1Y 6H2', country: 'Canada', notes: '' },
+      { id: 's-glacier-cal-dt', name: 'Calgary Downtown', isHQ: false, address: '317 7 Ave SW, Calgary, AB T2P 2Y9', country: 'Canada', notes: '' },
+      { id: 's-glacier-cal-mr', name: 'Calgary Market Mall', isHQ: false, address: '3625 Shaganappi Trail NW, Calgary, AB T3A 0E2', country: 'Canada', notes: '' },
+      { id: 's-glacier-cal-cf', name: 'Calgary Chinook', isHQ: false, address: '6455 Macleod Trail SW, Calgary, AB T2H 0K8', country: 'Canada', notes: '' },
+      { id: 's-glacier-edm-dt', name: 'Edmonton Downtown', isHQ: false, address: '10180 101 St NW, Edmonton, AB T5J 3S4', country: 'Canada', notes: '' },
+      { id: 's-glacier-edm-wm', name: 'Edmonton West Mall', isHQ: false, address: '8882 170 St NW, Edmonton, AB T5T 4M2', country: 'Canada', notes: 'Open 24h.' },
+      { id: 's-glacier-edm-sg', name: 'Edmonton Southgate', isHQ: false, address: '5015 111 St NW, Edmonton, AB T6H 4M6', country: 'Canada', notes: '' },
+      { id: 's-glacier-leth', name: 'Lethbridge Park Place', isHQ: false, address: '501 1 Ave S, Lethbridge, AB T1J 4L9', country: 'Canada', notes: '' },
+      { id: 's-glacier-rd', name: 'Red Deer Bower Place', isHQ: false, address: '4900 Molly Banister Dr, Red Deer, AB T4R 1N9', country: 'Canada', notes: '' },
+    ],
+    terminals: [
+      { sn: 'N950-0014-5501', model: 'N950', storeId: 's-glacier-hq', state: 'active', lastSeen: '1 min ago' },
+      { sn: 'N950-0014-5502', model: 'N950', storeId: 's-glacier-hq', state: 'active', lastSeen: '1 min ago' },
+      { sn: 'N950-0014-5510', model: 'N950', storeId: 's-glacier-bby', state: 'active', lastSeen: '3 min ago' },
+      { sn: 'N950-0014-5511', model: 'N950', storeId: 's-glacier-bby', state: 'active', lastSeen: '2 min ago' },
+      { sn: 'S90-0822-5512', model: 'S90', storeId: 's-glacier-bby', state: 'active', lastSeen: '11 min ago' },
+      { sn: 'N950-0014-5520', model: 'N950', storeId: 's-glacier-ric', state: 'active', lastSeen: '5 min ago' },
+      { sn: 'N950-0014-5530', model: 'N950', storeId: 's-glacier-cal', state: 'active', lastSeen: '1 min ago' },
+      { sn: 'N950-0014-5531', model: 'N950', storeId: 's-glacier-cal', state: 'active', lastSeen: '1 min ago' },
+    ],
+  },
+]
