@@ -1,6 +1,6 @@
 # Auth & Permission Rewrite — Design Spec
 
-> 2026-05-14 · 设计阶段，待 Claude 接力实现。
+> 2026-05-14 创建，2026-05-15 全面修订（Org/Character/Permission 模型重做）。
 > 替换当前 Better Auth + Google OAuth 链路，重做账密登录、session、权限、统一请求管线、i18n、安全、日志。
 > 本 spec 由 brainstorming 流程产出，逐节经用户确认。
 > 落地用 WIP.md 任务清单（见末尾"渐进式落地步骤"）。
@@ -11,8 +11,8 @@
 
 - 目标 app：`apps/admin`、`apps/partner`、`apps/merchant`（共享 DB + Redis，运行时彼此独立）
 - 数据可重来：当前数据库 / Redis 数据无需保留
-- 设计原则：安全第一 → 可维护 → 性能；约定大于配置；公共能力下沉到 `packages/`，业务/部署留在 `apps/`
-- 不做：复杂多版本 API、操作审计表、单点登录、refresh token、SSO、密码强度评分、SRP/PAKE、多语言路径段
+- 设计原则：安全第一 → 可维护 → 性能；约定大于配置；公共基础设施下沉到 `packages/`，业务 CRUD 留在各 `apps/` 自身
+- 不做：复杂多版本 API、操作审计表、单点登录、refresh token、SSO、密码强度评分、SRP/PAKE、多语言路径段、dataScope、ISV 应用分发链路（AppDistribution）、跨 app 单点登录
 
 ## 1. 整体架构
 
@@ -21,205 +21,168 @@ apps/{admin,partner,merchant}
   ├ proxy.ts            注 x-request-id + 10MB 限制 + 安全头（不再做登录校验）
   ├ instrumentation.ts  SIGTERM 关 Prisma / Redis
   ├ i18n/request.ts     next-intl 入口，合并 shared + app 词条
+  ├ auth.config.ts      ALLOWED_CHARACTERS（该 app 可登录的 character 集合）
   ├ app/(public)/login  登录页
   ├ app/(authed)/...    requireSession() 保护
   ├ app/api/auth/...    login / logout / me / change-password
-  ├ app/api/me/menu     菜单树（DB 过滤后）
+  ├ app/api/me/menu     菜单树（DB 过滤后按 character 分组）
+  ├ app/api/{app}/...   该 app 的业务 API（org 建立、子账号管理、业务对象等）
   ├ app/api/health      DB + Redis 健康
-  └ app/403/page.tsx    无权限页
+  ├ app/403/page.tsx    无权限页
+  └ src/
+    ├ repo/             该 app 的数据访问层（org/user/character/permission/menu）
+    └ services/         该 app 的业务编排（创建下游 org、子账号管理 …）
 
 packages/
   ├ config         env 校验 + isPublicPath + resolveTrustedOrigins
-  ├ db             Prisma schema + 客户端 + seed
+  ├ db             Prisma schema + 客户端单例 + path 工具 + 类型 re-export（无 repo 类）
   ├ logger         pino + redact + child(requestId, userId)
   ├ i18n           shared messages + zod errorMap + 错误码 key 表
   ├ security       argon2、RSA 解密、密码 schema、CSP/安全头、redact
   ├ cache          Redis 客户端 + sessionStore（set/get/touch/del）
-  ├ auth           login/logout/me/change-password/admin-reset 服务 + requireSession
-  ├ permissions    PermissionChecker（has/can/list）
+  ├ auth           login/logout/me/change-password/admin-reset 服务 + requireSession + buildSnapshot
+  ├ permissions    PermissionChecker（has / characters / list）
   ├ request        withApi + requestJson + respond + ApiException + useAuthStore + rateLimit
-  └ ui             shadcn + 通用布局 + sonner + <RequirePermission> + <LanguageSwitch>
+  └ ui             shadcn + 通用布局 + sonner + <RequirePermission> + <LanguageSwitch> + <CharacterSwitch>
 ```
 
-**砍掉**：`better-auth`、`bcryptjs`、`@cloud/auth` 的 Better Auth 适配、`packages/db` 的 `Account/Session/Verification` 模型、Google OAuth 路径、`sha256(token)` 作为 Redis key 的环节。
+**砍掉**：`better-auth`、`bcryptjs`、`@cloud/auth` 的 Better Auth 适配、Google OAuth 路径、`sha256(token)` 作为 Redis key 的环节。
 
 ## 2. 数据模型
 
-### 身份与组织
+### 2.1 Character / Organization / 身份
 
 ```prisma
-enum Platform { admin partner merchant }
+enum OrgStatus  { active suspended }
 enum UserStatus { active locked }
 
+model Character {
+  id              String                  @id @default(cuid())
+  key             String                  @unique           // 'admin' | 'iso' | 'isv' | 'merchant'
+  name            String
+  description     String?
+  permissions     Permission[]
+  menus           Menu[]
+  orgCharacters   OrganizationCharacter[]
+  userCharacters  UserCharacter[]
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  @@map("character")
+}
+
+model Organization {
+  id          String                  @id @default(cuid())
+  name        String
+  // Materialized Path：'/' 分隔，含自身 id 作末段
+  //   admin 根：    '/<adminId>'
+  //   partner：    '/<adminId>/<partnerId>'
+  //   merchant：   '/<adminId>/<partnerId>/<merchantId>'
+  // 应用层在创建时拼接：parent.path || '/' || newId（admin 根 path = '/' || self）
+  path        String
+  status      OrgStatus               @default(active)
+  characters  OrganizationCharacter[]
+  users       User[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  @@index([path])
+  @@map("organization")
+}
+
+model OrganizationCharacter {
+  orgId       String
+  characterId String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  character   Character    @relation(fields: [characterId], references: [id], onDelete: Restrict)
+  createdAt   DateTime     @default(now())
+  @@id([orgId, characterId])
+  @@map("organization_character")
+}
+
 model User {
-  id            String      @id @default(cuid())
-  platform      Platform
-  email         String      @unique
-  name          String
-  status        UserStatus  @default(active)
-  partnerOrgId  String?                              // platform=partner 时非空
-  merchantOrgId String?                              // platform=merchant 时非空
-  lastLoginAt   DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  partnerOrg    PartnerOrg?  @relation(fields: [partnerOrgId], references: [id], onDelete: Restrict)
-  merchantOrg   MerchantOrg? @relation(fields: [merchantOrgId], references: [id], onDelete: Restrict)
-  passwords     PasswordHistory[]
-  userRoles     UserRole[]
-  @@index([platform, status])
+  id              String            @id @default(cuid())
+  orgId           String
+  org             Organization      @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  email           String                              // 唯一性靠下方 partial index，软删可释放
+  name            String
+  isMaster        Boolean           @default(false)   // 每个 org 至多 1 个 master，应用层约束
+  status          UserStatus        @default(active)  // active / locked（登录拒绝）
+  deletedAt       DateTime?                           // 非空即软删
+  permissionVersion Int             @default(0)       // 角色/权限变更时 +1，影响 snapshot.version
+  lastLoginAt     DateTime?
+  passwords       PasswordHistory[]
+  characters      UserCharacter[]
+  permissions     UserPermission[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  @@index([orgId, deletedAt])
   @@map("user")
 }
 
-// DB CHECK 约束（migration 里手写 raw SQL）：
-//   admin    → partnerOrgId IS NULL AND merchantOrgId IS NULL
-//   partner  → partnerOrgId IS NOT NULL AND merchantOrgId IS NULL
-//   merchant → merchantOrgId IS NOT NULL AND partnerOrgId IS NULL
-
-model PartnerOrg {
-  id    String @id @default(cuid())
-  name  String
-  isIso Boolean @default(false)
-  isIsv Boolean @default(false)
-  users        User[]
-  ownedApps    App[]               // 作为 ISV 拥有的 app
-  ownedMerchants MerchantOrg[]    // 作为 ISO 旗下商户
-  appDistributions AppDistribution[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@map("partner_org")
+model UserCharacter {
+  userId      String
+  characterId String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  @@id([userId, characterId])
+  @@map("user_character")
 }
 
-model MerchantOrg {
-  id              String     @id @default(cuid())
-  name            String
-  ownerIsoOrgId   String
-  ownerIso        PartnerOrg @relation(fields: [ownerIsoOrgId], references: [id], onDelete: Restrict)
-  users           User[]
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  @@index([ownerIsoOrgId])
-  @@map("merchant_org")
-}
-
-model App {
-  id            String     @id @default(cuid())
-  name          String
-  ownerIsvOrgId String
-  ownerIsv      PartnerOrg @relation(fields: [ownerIsvOrgId], references: [id], onDelete: Restrict)
-  distributions AppDistribution[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  @@map("app")
-}
-
-model AppDistribution {
-  appId       String
-  isoOrgId    String
-  app         App        @relation(fields: [appId], references: [id], onDelete: Cascade)
-  isoOrg      PartnerOrg @relation(fields: [isoOrgId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
-  @@id([appId, isoOrgId])
-  @@map("app_distribution")
-}
-```
-
-> `SessionSnapshot.orgId` 在 BE 拼时按 platform 取对应字段：`platform=partner` 取 `partnerOrgId`，`platform=merchant` 取 `merchantOrgId`，`platform=admin` 为 `null`。前端不感知字段差异。
-
-### RBAC
-
-```prisma
-model Role {
-  id          String           @id @default(cuid())
-  key         String           @unique          // 'admin','iso','isv','merchant_admin','merchant_member'
-  name        String
-  platform    Platform                          // 与 User.platform 校验一致
-  description String?
-  userRoles   UserRole[]
-  rolePermissions RolePermission[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@map("role")
-}
-
-model Permission {
-  id        String @id @default(cuid())
-  key       String @unique       // 'merchant.create','terminal.lock'
-  business  String
-  method    String
-  description String?
-  rolePermissions RolePermission[]
-  menuPermissions MenuPermission[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@unique([business, method])
-  @@map("permission")
-}
-
-model RolePermission {
-  roleId       String
+model UserPermission {
+  userId       String
   permissionId String
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
-  @@id([roleId, permissionId])
-  @@map("role_permission")
-}
-
-model UserRole {
-  userId String
-  roleId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  @@id([userId, roleId])
-  @@map("user_role")
+  @@id([userId, permissionId])
+  @@map("user_permission")
 }
 ```
 
-> v1 **不做 dataScope**。需要时在 `RolePermission` 加 `dataScope` 列、`PermissionChecker` 加 `scopeOf` API。
-
-### 密码历史
+### 2.2 权限
 
 ```prisma
-model PasswordHistory {
-  id           String   @id @default(cuid())
-  userId       String
-  passwordHash String                   // argon2id
-  setBy        String                   // userId of operator (self / admin reset)
-  source       PasswordSource           // self_change / admin_reset / bootstrap
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
-  @@index([userId, createdAt])
-  @@map("password_history")
+model Permission {
+  id          String            @id @default(cuid())
+  characterId String
+  character   Character         @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  business    String                                                // 'merchant'
+  method      String                                                // 'create'
+  description String?
+  users       UserPermission[]
+  menus       MenuPermission[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  @@unique([characterId, business, method])
+  @@index([characterId])
+  @@map("permission")
 }
-
-enum PasswordSource { self_change admin_reset bootstrap }
 ```
 
-- 当前密码 = `password_history.createdAt DESC LIMIT 1`
-- "最近 5 条不重复" = `LIMIT 5` 后 `argon2.verify(new, oldHash)` 逐条比对
-- admin reset 也写一条 (source=admin_reset)，参与后续 5 条历史
-- 不删旧记录；积压无碍（B 端用户量级）
+> 同名 `business.method` 在不同 character 下视为不同权限语义（例如 `merchant.create` 在 `iso` 与 `admin` 是不同的业务动作）。
 
-### 菜单
+### 2.3 菜单
 
 ```prisma
+enum MenuStatus { visible hidden }
+
 model Menu {
-  id        String   @id @default(cuid())
-  key       String   @unique             // 用于前端路由映射
-  parentId  String?
-  parent    Menu?    @relation("MenuTree", fields: [parentId], references: [id], onDelete: SetNull)
-  children  Menu[]   @relation("MenuTree")
-  platform  Platform
-  path      String                       // '/users'
-  icon      String?
-  sort      Int      @default(0)
-  status    MenuStatus @default(visible)
-  i18nKey   String                       // 'menu.users'，FE 翻译
+  id          String           @id @default(cuid())
+  key         String           @unique           // 前端路由 / i18n 锚点
+  parentId    String?
+  parent      Menu?            @relation("MenuTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Menu[]           @relation("MenuTree")
+  characterId String
+  character   Character        @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  path        String                              // '/merchants'
+  icon        String?
+  sort        Int              @default(0)
+  status      MenuStatus       @default(visible)
+  i18nKey     String                              // 'menu.merchants'
   permissions MenuPermission[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@index([platform, status])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  @@index([characterId, status])
   @@map("menu")
 }
 
@@ -231,35 +194,72 @@ model MenuPermission {
   @@id([menuId, permissionId])
   @@map("menu_permission")
 }
-
-enum MenuStatus { visible hidden }
 ```
 
-- 菜单无权限绑定 = 公共菜单（登录后即可见）
-- 有权限绑定 = any-of：用户拥有任一条即可见
+- 节点单 character 归属；多 character 用户看到各 character 树的并集（顶部 `<CharacterSwitch>` 切换识别）
+- 节点有 MenuPermission：用户在该 character 下的 permissions any-of 命中则可见
+- 节点无 MenuPermission：该 character 下公共菜单
+- 祖先回填：任一后代可见 → 祖先保留为壳
 
-### 会话
+### 2.4 密码历史
 
-- 不入库
-- Redis key `session:<sessionToken>`
-- value = `SessionSnapshot` JSON
-- TTL 1800s sliding（每次访问 `EXPIRE` 重置为 now+1800）
-- 无绝对上限（按需补）
-- 多端登录允许，v1 不做 user→sessions 反向索引
+```prisma
+enum PasswordSource { self_change admin_reset bootstrap }
+
+model PasswordHistory {
+  id           String         @id @default(cuid())
+  userId       String
+  passwordHash String                                       // argon2id
+  setBy        String                                       // userId of operator (self / admin reset / 创建 org/子账号的 actor)
+  source       PasswordSource
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+  @@index([userId, createdAt])
+  @@map("password_history")
+}
+```
+
+- 当前密码 = `password_history WHERE userId ORDER BY createdAt DESC LIMIT 1`
+- "最近 5 条不重复" = `LIMIT 5` 后 `argon2.verify(new, oldHash)` 逐条比对
+- admin reset / bootstrap 均参与历史
+- 不删旧记录
+
+### 2.5 手写迁移补丁
+
+Prisma `prisma migrate dev` 生成基础结构后，手写一个补丁迁移追加：
+
+```sql
+-- email 全局唯一仅约束 "活" 用户，软删后可释放
+CREATE UNIQUE INDEX user_email_active_unique
+  ON "user" (email) WHERE "deletedAt" IS NULL;
+
+-- Materialized Path 前缀查询索引（'/' 分隔）
+CREATE INDEX organization_path_prefix
+  ON organization (path text_pattern_ops);
+
+-- 路径自检：末段必须等于自身 id（应用层亦校验）
+ALTER TABLE organization
+  ADD CONSTRAINT organization_path_self_tail
+  CHECK (split_part(path, '/', array_length(string_to_array(path, '/'), 1)) = id);
+```
+
+### 2.6 SessionSnapshot
+
+不入库；Redis key `session:<sessionToken>`，TTL 1800s sliding。
 
 ```ts
 type SessionSnapshot = {
-  account: { id: string; email: string; name: string; image?: string };
-  platform: 'admin' | 'partner' | 'merchant';
-  orgId: string | null;
-  roles: string[];                  // role.key 列表
-  permissions: string[];            // permission.key 扁平列表，已 union 去重
-  version: number;                  // 角色/权限变更时 bump
-  issuedAt: string;                 // ISO timestamp
+  account:     { id: string; email: string; name: string };
+  org:         { id: string; name: string };
+  isMaster:    boolean;
+  characters:  string[];                            // ['iso','isv']
+  permissions: Record<string, string[]>;            // { iso: ['merchant.create',...], isv: [...] }
+  version:     number;                              // = user.permissionVersion 时新建；过期 / 不一致时重建
+  issuedAt:    string;                              // ISO timestamp
 };
 ```
 
-> snapshot 不存 menu 列表。菜单树（含 parentId / icon / sort / i18nKey）走 `/api/me/menu` 单独取，由 useAuthStore 客户端缓存。
+snapshot 不存菜单。菜单经 `/api/me/menu` 单独取，FE 客户端缓存。
 
 ## 3. 认证流程
 
@@ -285,19 +285,21 @@ Body: `{ email: string, encrypted: string }`
 ```
 1. 解密 encrypted → { password, ts }；ts 超 60s → 400 REPLAY_DETECTED
 2. GET Redis login:fail:account:<email>，>=5 → 401 ACCOUNT_LOCKED { ttl }
-3. SELECT user WHERE email=$1 AND status='active'
-   - 未命中 → INCR login:fail / EXPIRE 3600 → 401 INVALID_CREDENTIALS
+3. SELECT user WHERE email=$1 AND status='active' AND "deletedAt" IS NULL
+     - 未命中 → INCR login:fail / EXPIRE 3600 → 401 INVALID_CREDENTIALS
 4. SELECT password_history WHERE userId=u ORDER BY createdAt DESC LIMIT 1 → currentHash
 5. argon2.verify(currentHash, password)
-   - false → INCR login:fail / EXPIRE 3600 → 401 INVALID_CREDENTIALS
-6. true：
-   a. DEL login:fail:account:<email>
-   b. snapshot = await buildSnapshot(user)
-   c. token = crypto.randomBytes(32).toString('hex')   // 64 char
-   d. SET session:<token> JSON(snapshot) EX 1800
-   e. UPDATE user SET lastLoginAt=now()
-   f. Set-Cookie: session-token=<token>; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=…
-   g. 200 { account, roles, permissions }
+     - false → INCR login:fail / EXPIRE 3600 → 401 INVALID_CREDENTIALS
+6. snapshot = await buildSnapshot(user)
+7. App 边界校验：snapshot.characters ∩ ALLOWED_CHARACTERS（apps/<app>/auth.config.ts）必须非空
+     - 空 → 401 INVALID_CREDENTIALS（不暴露原因）
+8. true：
+     a. DEL login:fail:account:<email>
+     b. token = crypto.randomBytes(32).toString('hex')   // 64 char
+     c. SET session:<token> JSON(snapshot) EX 1800
+     d. UPDATE user SET lastLoginAt=now()
+     e. Set-Cookie: session-token=<token>; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=…
+     f. 200 { account, org, isMaster, characters, permissions }
 ```
 
 ### 3.3 续期（sliding TTL）
@@ -318,7 +320,7 @@ Body: `{ encryptedOld: string, encryptedNew: string }`
 1. 解密 + ts 校验（两个都校）
 2. complexity(newPassword, user.email)
 3. SELECT password_history LIMIT 1 → currentHash；argon2.verify(currentHash, oldPassword)
-   - false → 401 INVALID_CREDENTIALS
+     - false → 401 INVALID_CREDENTIALS
 4. newPassword === oldPassword → 400 PASSWORD_REUSED
 5. SELECT password_history LIMIT 5 → 逐条 argon2.verify(hash, newPassword) → 命中 → 400 PASSWORD_REUSED
 6. INSERT password_history (userId, hash=argon2.hash(newPassword), source=self_change, setBy=userId)
@@ -331,7 +333,7 @@ Body: `{ encryptedOld: string, encryptedNew: string }`
 
 `POST /api/admin/users/:id/reset-password`
 
-要求 platform=admin + permission `user.reset_password`
+要求 actor 持 `admin` character + permission `user.reset_password`
 
 Body: `{ encryptedNew: string }`
 
@@ -342,15 +344,40 @@ Body: `{ encryptedNew: string }`
 4. 200 { ok: true, hint: "用户下次登录生效" }
 ```
 
-> 不强制踢下线（v1 没 user→session 反向索引）；如需立即生效，后续阶段补 user_session_index。
+> 不强制踢下线（v1 没 user→session 反向索引）；需要立即生效时另起阶段补 user_session_index。
 
 ### 3.7 me
 
-`GET /api/me` → snapshot 反序列化对外，去掉 `version` / `issuedAt` 内部字段；返 `{ account, platform, orgId, roles, permissions }`。
+`GET /api/me` → 返 `{ account, org, isMaster, characters, permissions }`，剔除内部字段 `version` / `issuedAt`。
 
-`GET /api/me/menu` → DB 查 Menu WHERE `platform = user.platform` AND `status = 'visible'`；按 MenuPermission any-of 过滤；按 `parentId` / `sort` 组装树后返回；树节点字段：`{ key, path, icon?, i18nKey, sort, children? }`。
+`GET /api/me/menu` → 返 `{ trees: Record<characterKey, MenuNode[]> }`。过滤规则见 §3.8。
 
-### 3.8 公共路径
+### 3.8 菜单过滤
+
+对 snapshot 里每个 character 独立跑一次：
+
+```
+1. SELECT menu WHERE characterId = <char> AND status = 'visible' ORDER BY sort
+2. 每个节点：
+     - 无 MenuPermission → 该 character 下公共菜单，保留
+     - 有 MenuPermission → snapshot.permissions[<char>] 与之 any-of 命中 → 保留
+3. 按 parentId 拼树
+4. 祖先回填：任一后代保留 → 祖先保留为壳
+5. 空 character（用户拥有 character 但 0 perm）→ trees[<char>] = []
+```
+
+```ts
+type MenuNode = {
+  key:      string;
+  path:     string;
+  icon?:    string;
+  i18nKey:  string;
+  sort:     number;
+  children?: MenuNode[];
+};
+```
+
+### 3.9 公共路径
 
 `isPublicPath()` 维护在 `@cloud/config`：
 
@@ -368,54 +395,174 @@ const PUBLIC_PATHS = [
 
 > proxy.ts 不做登录态校验。仅页面通过 `(authed)/layout.tsx` 的 `requireSession()`、API 通过 `withApi` 的 `requireAuth: true` 校验。
 
+### 3.10 创建下游 org（admin → partner、partner(iso) → merchant）
+
+两条路由共用 service `createDownstreamOrgService`（各 app 自实现，按本节合同）：
+
+- `POST /api/admin/orgs/partner`
+    - 鉴权：actor 持 `admin` character + permission `org.create`（admin 下）
+    - Body: `{ name, characters: ('iso'|'isv')[], master: { email, name, encryptedPassword } }`
+- `POST /api/partner/orgs/merchant`
+    - 鉴权：actor org 含 `iso` character + permission `merchant_org.create`（iso 下）
+    - Body: `{ name, master: { email, name, encryptedPassword } }`；characters 固定 `['merchant']`
+
+事务：
+
+```
+1. 校验：
+     - actor 权限
+     - characters 子集合法（admin 路由只能选 iso/isv；partner 路由强制 ['merchant']）
+     - email 在活账号中唯一（partial unique index 兜底）
+     - 解密 + complexity + ts
+2. INSERT organization (path = actor.org.path || '/' || newId, status=active)
+3. INSERT organization_character[]
+4. INSERT user (orgId=newOrg.id, isMaster=true, email, name)
+5. INSERT user_character[] —— master 给齐新 org 全部 character
+6. INSERT password_history (userId=master.id, source=bootstrap, setBy=actor.id, hash=argon2(decrypted))
+7. RETURN { orgId, masterUserId }
+```
+
+> master 的 `user_character` 显式写齐便于后续黑名单一致查询；`user_permission` 不写，master 走 §4 的"按 org.characters 物化全集"。
+
+### 3.11 master 建子账号
+
+`POST /api/{app}/users`，actor 必须是本 org 的 master（v1 简化）。
+
+```
+body: {
+  email,
+  name,
+  characters:    string[],       // ⊆ actor.org.characters
+  permissionIds: string[],       // ⊆ characters 下的 Permission
+  encryptedPassword,
+}
+
+tx:
+  1. 校验：
+       - actor.isMaster
+       - characters ⊆ actor.org.characters
+       - permissionIds 全部归属上述 characters
+       - email 在活账号中唯一
+       - 解密 + complexity + ts
+  2. INSERT user (orgId=actor.orgId, isMaster=false)
+  3. INSERT user_character[]
+  4. INSERT user_permission[]
+  5. INSERT password_history (userId=user.id, source=bootstrap, setBy=actor.id)
+```
+
+### 3.12 master 改子账号字段 / 权限
+
+`PUT /api/{app}/users/:id`，body 同 §3.11。
+
+```
+tx:
+  1. 校验：同 §3.11；target 在 actor org 内；target.isMaster=false；target.deletedAt IS NULL
+  2. UPDATE user SET name, ...
+  3. DELETE FROM user_character WHERE userId=$1；批量 INSERT 新集合
+  4. DELETE FROM user_permission WHERE userId=$1；批量 INSERT 新集合
+  5. UPDATE user SET permissionVersion = permissionVersion + 1 WHERE id=$1
+```
+
+> v1 已知限制：目标用户活跃 session 的 Redis 旧 snapshot 不主动失效；最多 30 分钟自然过期。
+
+### 3.13 软删 / 停用子账号
+
+`DELETE /api/{app}/users/:id`（软删）：
+
+```
+约束：actor.isMaster；target 在同 org；target.isMaster=false；target.deletedAt IS NULL（幂等）
+tx:
+  1. UPDATE user SET deletedAt = now(), status = 'locked'
+  不动 user_character / user_permission（保留以便还魂）
+```
+
+`PATCH /api/{app}/users/:id/status`：在 `active|locked` 之间切换，不动 deletedAt。
+
+仓库层约定（per-app `repo/user-repo.ts`）：
+
+```ts
+userRepo.findByEmail(email)              // 默认追加 deletedAt IS NULL
+userRepo.list(orgId)
+userRepo.findIncludingDeleted(id)        // 显式入口，仅 admin 恢复用
+```
+
 ## 4. 权限模型
 
 ### 4.1 SessionSnapshot
 
-见 §2 末尾。
+见 §2.6。
 
-### 4.2 PermissionChecker（位于 `@cloud/permissions`）
+### 4.2 buildSnapshot
+
+位于 `@cloud/auth`，直接使用 prisma（不依赖 app repo）：
+
+```
+master?
+  → permissions = group(
+      allPermissionsOfCharacters(org.characters),
+      p => p.character.key,
+    )
+not master?
+  → SELECT user_character → characters
+  → SELECT user_permission → permission rows
+  → permissions = group(rows, r => r.character.key)
+  → characters 字段独立来源 user_character（含尚无 user_permission 的空 character 占位）
+version = user.permissionVersion
+issuedAt = now().toISOString()
+```
+
+未来扩展（黑/白名单 override）只动 buildSnapshot 末尾的过滤步骤，Checker 不变。
+
+### 4.3 PermissionChecker（`@cloud/permissions`）
 
 ```ts
 class PermissionChecker {
-  constructor(snapshot: Pick<SessionSnapshot,'roles'|'permissions'>);
+  constructor(snapshot: Pick<SessionSnapshot, 'characters' | 'permissions'>);
 
-  has(input: string | string[]): boolean;       // any-of
-  can(business: string, method: string | string[]): boolean;
-  list(): string[];
-  roles(): string[];
+  has(character: string, businessMethod: string | string[]): boolean;   // any-of
+  characters(): string[];
+  list(character: string): string[];
 }
 ```
 
-> 不暴露 `scopeOf` / `allows` / `scopedWhere` 等 scope API。
+无 master 短路 —— master 的权限已物化到 snapshot.permissions。
+无 hasAny —— 跨 character 检查无业务含义。
 
-### 4.3 withApi 权限选项
+### 4.4 withApi 权限选项
 
 ```ts
 withApi({
-  requireAuth: true,        // 默认
-  permission: 'merchant.create',
-  // 或
-  permission: ['merchant.create', 'merchant.update'],
+  requireAuth: true,                                                  // 默认
+  permission: { character: 'iso', businessMethod: 'merchant.create' },
+  // 或：
+  permission: { character: 'iso', businessMethod: ['merchant.create', 'merchant.update'] }, // any-of
 }, handler);
 ```
 
 - public：`requireAuth: false`，不接受 permission
 - 命中失败：401 UNAUTHENTICATED / 401 SESSION_EXPIRED（清 cookie）/ 403 PERMISSION_DENIED
 
-### 4.4 前端组件
+### 4.5 前端组件
 
 ```tsx
-<RequirePermission perm="merchant.create">
-  <Button>New</Button>
+<RequirePermission character="iso" perm="merchant.create">
+  <Button>新建商户</Button>
 </RequirePermission>
 
-<RequirePermission perm={['merchant.update', 'merchant.delete']} fallback={null}>
+<RequirePermission character="iso" perm={['merchant.update', 'merchant.delete']} fallback={null}>
   ...
 </RequirePermission>
 ```
 
-底层走 `useAuthStore.hasPermission(input)`：any-of 字符串集合判断。
+底层走 `useAuthStore.hasPermission(character, input)`：any-of 字符串集合判断。
+
+### 4.6 character 切换器
+
+`<CharacterSwitch>` 顶部组件，仅 `snapshot.characters.length > 1` 时可见。切换值进 `useAuthStore.activeCharacter`，控制：
+
+- 菜单树展示哪一棵
+- 路由 / 业务页面顶部标签
+- 仅 UI 层；服务端鉴权依旧靠 withApi 的 `{ character, businessMethod }`，与 activeCharacter 解耦
 
 ## 5. 统一请求管线
 
@@ -462,13 +609,13 @@ class ApiException extends Error {
 |---|---|---|
 | `UNAUTHENTICATED` | 401 | 请求无 cookie |
 | `SESSION_EXPIRED` | 401 | cookie 在但 Redis miss（清 cookie） |
-| `PERMISSION_DENIED` | 403 | 已登录无权限 |
-| `INVALID_CREDENTIALS` | 401 | 账密错或用户不存在/已锁 |
+| `PERMISSION_DENIED` | 403 | 已登录无权限 / master-only 操作非 master 触发 |
+| `INVALID_CREDENTIALS` | 401 | 账密错 / 用户不存在 / 软删 / character 不匹配本 app |
 | `ACCOUNT_LOCKED` | 401 | 1h 内失败 5 次后 |
 | `REPLAY_DETECTED` | 400 | 登录/改密 payload ts 超 60s |
 | `PASSWORD_REUSED` | 400 | 改密命中最近 5 条历史 |
 | `PASSWORD_WEAK` | 400 | 复杂度不过 |
-| `VALIDATION_ERROR` | 400 | zod 校验失败 |
+| `VALIDATION_ERROR` | 400 | zod 校验失败 / characters/permissions 越界 |
 | `INVALID_JSON` | 400 | body JSON 错 |
 | `PAYLOAD_TOO_LARGE` | 413 | size > 10MB |
 | `RATE_LIMITED` | 429 | 命中限频 |
@@ -767,14 +914,21 @@ export async function register() {
 ~ packages/auth         (重写：删 Better Auth / Google；新 login/logout/me/change/reset/buildSnapshot/requireSession)
 ~ packages/cache        (sessionStore；移除 sha256 key)
 ~ packages/security     (换 argon2；加 RSA / headers / password-schema / redact-paths)
-~ packages/permissions  (简化 has/can/list)
+~ packages/permissions  (简化 has / characters / list)
 ~ packages/request      (RESTful 响应；新 withApi / requestJson / rateLimit；删 loading store / silent)
-~ packages/db           (新 schema；删 Account/Session/Verification)
-~ packages/config       (新增 env)
-~ packages/ui           (sonner / RequirePermission / LanguageSwitch / 403 page)
+~ packages/db           (新 schema；删 Account/Session/Verification；新增 path 工具 + 类型 re-export；不放 repo 类)
+~ packages/config       (新增 env keys + auth.config 类型)
+~ packages/ui           (sonner / RequirePermission / LanguageSwitch / CharacterSwitch / AuthBoundary / 403 page)
 - better-auth           (依赖移除)
 - bcryptjs              (依赖移除)
+
+apps/<app>/src/
+  + repo/               每 app 自管：org-repo / user-repo / character-repo / permission-repo / menu-repo
+  + services/           每 app 自管：create-downstream-org / create-sub-user / update-sub-user / soft-delete-user
+  + auth.config.ts      ALLOWED_CHARACTERS 常量
 ```
+
+业务包禁直接 `prisma.user.*`：一律走本 app `repo/`。Stage 13 加 ESLint 规则强约束；v1 期间靠 review。
 
 ## 10. 渐进式落地步骤
 
@@ -790,11 +944,20 @@ export async function register() {
 
 ### Stage 1 — Prisma 新 schema + seed
 
-- T1.1 重写 `prisma/schema.prisma`：按 §2 全部模型；移除 Account / Session / Verification
+- T1.1 重写 `prisma/schema.prisma`：按 §2 全部模型；移除 Account / Session / Verification / Role / UserRole / RolePermission / Platform enum / 旧 User 字段
 - T1.2 `pnpm db:migrate -- --name auth_rewrite_v1`
-- T1.3 重写 `prisma/seed.ts`：3 套 Role（admin/iso/isv/merchant_admin/merchant_member），初始 Permission 集合，role_permission 绑定，bootstrap 用户（admin / partner_admin / merchant_admin），首条 PasswordHistory（source=bootstrap，密码 argon2 哈希），示例 Menu + MenuPermission
-- T1.4 `@cloud/db/index.ts` re-export 新类型 / enum；删除旧 export
-- T1.5 README seed 表格更新（账号 / 密码 / 角色）
+- T1.3 手写补丁迁移 `auth_rewrite_v1_indexes`：
+    - `CREATE UNIQUE INDEX user_email_active_unique ON "user" (email) WHERE "deletedAt" IS NULL`
+    - `CREATE INDEX organization_path_prefix ON organization (path text_pattern_ops)`
+    - `ALTER TABLE organization ADD CONSTRAINT organization_path_self_tail CHECK (split_part(path,'/',array_length(string_to_array(path,'/'),1)) = id)`
+- T1.4 重写 `prisma/seed.ts`：
+    - 4 个 Character（admin / iso / isv / merchant）
+    - 各 character 下初始 Permission 集合
+    - admin Organization（path = `/<adminId>`）+ OrganizationCharacter
+    - admin master User + UserCharacter(admin) + PasswordHistory(source=bootstrap)
+    - 初始 Menu 树（每个 character 一份示例）+ MenuPermission
+- T1.5 `@cloud/db/index.ts` re-export 新类型 / enum；新增 `path.ts`（`buildOrgPath / parseOrgPath`）；删除旧 export
+- T1.6 README seed 表格更新（账号 / 密码 / character）
 
 ### Stage 2 — logger + i18n 基建
 
@@ -821,19 +984,19 @@ export async function register() {
 
 ### Stage 5 — auth 重写（与旧实现并行，Stage 13 才删旧）
 
-- T5.1 在 `packages/auth/src` 下**并列添加**新文件：`login-service.ts` / `logout-service.ts` / `build-snapshot.ts` / `change-password-service.ts` / `admin-reset-service.ts` / `require-session.ts`；旧文件（`session-role.ts` / 旧 `index.ts` 中的 Better Auth glue）原地保留不动
-- T5.2 `loginService({ email, encrypted })`：解密 → 限频 → 查用户 → 历史最新 verify → 失败 INCR / 成功 buildSnapshot + createSession + 设 cookie
+- T5.1 在 `packages/auth/src` 下**并列添加**新文件：`login-service.ts` / `logout-service.ts` / `build-snapshot.ts` / `change-password-service.ts` / `admin-reset-service.ts` / `require-session.ts`；旧文件原地保留不动
+- T5.2 `loginService({ email, encrypted, allowedCharacters })`：解密 → 限频 → 查用户（含 `deletedAt IS NULL`）→ 历史最新 verify → buildSnapshot → 校验 `characters ∩ allowedCharacters` 非空 → 失败 INCR / 成功 createSession + 设 cookie
 - T5.3 `logoutService(token)`
-- T5.4 `buildSnapshot(userId, prisma) → SessionSnapshot`（联表 roles / permissions，菜单不进 snapshot）
+- T5.4 `buildSnapshot(userId, prisma) → SessionSnapshot`：master / sub 双分支物化 permissions Record；菜单不进 snapshot
 - T5.5 `changePasswordService(userId, encryptedOld, encryptedNew)`：含历史 5 条比对
 - T5.6 `adminResetPasswordService(actorId, targetUserId, encryptedNew)`
 - T5.7 `requireSession()` server 函数
-- T5.8 单元测试覆盖：成功 / 密码错 / 锁定 / 重放 / 历史重复 / 改密成功 / admin reset
+- T5.8 单元测试覆盖：成功 / 密码错 / 锁定 / 重放 / 历史重复 / 改密成功 / admin reset / character ∩ allowedCharacters 空 / 软删用户登录 / master snapshot 物化
 - T5.9 DEV_NOTE 同步：新增 "Auth 服务接口" 小节
 
 ### Stage 6 — permissions 简化
 
-- T6.1 `PermissionChecker`：has / can / list / roles；删 scope 相关 API
+- T6.1 `PermissionChecker`：`has(character, businessMethod)` / `characters()` / `list(character)`；删 scope / hasAny / 旧 has 签名
 - T6.2 单元测试更新
 
 ### Stage 7 — request 重写
@@ -842,11 +1005,11 @@ export async function register() {
 
 - T7.1 `respondData<T>` / `respondError`（写 `X-Request-Id` 头；错误体无外壳）
 - T7.2 `ApiException` + `ERROR_CODES` 常量（与 i18n codes.ts 对齐）
-- T7.3 新 `withApi`：执行顺序按 §5.4；ctx 携 logger
+- T7.3 新 `withApi`：执行顺序按 §5.4；ctx 携 logger；`permission: { character, businessMethod }` 三元签名
 - T7.4 `requestJson<T>`：401/403 自动跳；其它抛
-- T7.5 `useAuthStore`：snapshot 接收 / clearAuthCache / hasPermission
+- T7.5 `useAuthStore`：snapshot 接收（含 isMaster / characters / permissions Record）/ clearAuthCache / `hasPermission(character, input)` / `activeCharacter` state
 - T7.6 `rateLimit` 工具：`enforceRateLimit({ key, max, windowSec })`
-- T7.7 单元测试：withApi 状态机、requestJson 跳转
+- T7.7 单元测试：withApi 状态机、requestJson 跳转、hasPermission 多 character
 
 ### Stage 8 — 最小链路验证（不进 Next.js）
 
@@ -854,52 +1017,66 @@ export async function register() {
 - T8.2 测：RSA 加密 / 解密 / 时间窗
 - T8.3 测：createSession / getSession（命中即续期）/ deleteSession / TTL 重置（Redis 实际跑）
 - T8.4 测：loginService 成功路径（mock prisma 或起 test DB）
-- T8.5 测：loginService 失败计数 / 锁定 / 解锁
+- T8.5 测：loginService 失败计数 / 锁定 / 解锁 / 软删账号拒绝 / character 不匹配 app 拒绝
 - T8.6 测：changePasswordService 命中历史 5 条
-- T8.7 测：PermissionChecker.has / can
-- T8.8 测：withApi mock Request → 401（无 cookie）/ 401（session 过期）/ 403（无权限）/ 400（zod）/ 200（成功）
+- T8.7 测：PermissionChecker.has / characters / list（多 character 用户）
+- T8.8 测：withApi mock Request → 401（无 cookie）/ 401（session 过期）/ 403（无权限 / master-only）/ 400（zod）/ 200（成功）
 - T8.9 `scripts/smoke-auth.ts`：手测脚本，把 T8.4~T8.6 串成 stdout 输出
 - T8.10 **本阶段不通过不进下一阶段**
 
 ### Stage 9 — UI 包扩展
 
 - T9.1 引入 sonner；`toast.success/error` 接 next-intl
-- T9.2 `<RequirePermission perm>` 客户端组件
+- T9.2 `<RequirePermission character perm>` 客户端组件
 - T9.3 `<LanguageSwitch>` 客户端组件
-- T9.4 `<AuthBoundary>` 客户端组件（注 useAuthStore）
-- T9.5 通用 `<UnauthorizedPage>` 骨架
+- T9.4 `<CharacterSwitch>` 客户端组件（仅多 character 用户可见；写入 `useAuthStore.activeCharacter`）
+- T9.5 `<AuthBoundary>` 客户端组件（注 useAuthStore）
+- T9.6 通用 `<UnauthorizedPage>` 骨架
 
 ### Stage 10 — admin app 端到端打通
 
 - T10.1 重写 `apps/admin/proxy.ts`：requestId + size + security headers（含 nonce）
 - T10.2 `apps/admin/instrumentation.ts`：SIGTERM
-- T10.3 `apps/admin/i18n/request.ts` + `messages/{en,zh-CN}.json`
-- T10.4 路由结构：`(public)/login`、`(authed)/layout.tsx`（requireSession + AuthBoundary）、`(authed)/page.tsx`（dashboard）、`403/page.tsx`
-- T10.5 API：`/api/auth/login` / `logout` / `change-password` / `me` / `me/menu` / `health` + `/api/admin/users/:id/reset-password`
-- T10.6 用户列表 / 重置密码 UI（admin 业务示例）
-- T10.7 登录页：账密表单 + 静态公钥加密（Web Crypto SubtleCrypto importKey + encrypt RSA-OAEP）+ Toast i18n
-- T10.8 端到端手测：登录、续期、越权（403）、改密、锁定（5 次失败）、登出、跨标签、SIGTERM 优雅关
-- T10.9 DEV_NOTE 同步：新增 "App 集成模式 (admin)" 小节
-- T10.10 README 同步：admin 启动 + 默认账号 + 操作说明
+- T10.3 `apps/admin/auth.config.ts`：`ALLOWED_CHARACTERS = ['admin']`
+- T10.4 `apps/admin/i18n/request.ts` + `messages/{en,zh-CN}.json`
+- T10.5 `apps/admin/src/repo/`：org / user / character / permission / menu（filter `deletedAt IS NULL` 默认）
+- T10.6 `apps/admin/src/services/`：`createDownstreamOrgService`（产 partner）+ `createSubUserService` / `updateSubUserService` / `softDeleteUserService`
+- T10.7 路由结构：`(public)/login`、`(authed)/layout.tsx`（requireSession + AuthBoundary）、`(authed)/page.tsx`（dashboard）、`403/page.tsx`
+- T10.8 API：`/api/auth/login` / `logout` / `change-password` / `me` / `me/menu` / `health` + `/api/admin/users/:id/reset-password` + `/api/admin/orgs/partner` + `/api/admin/users` (POST/PUT/DELETE/PATCH status)
+- T10.9 用户列表 / 重置密码 UI / 创建 partner org UI
+- T10.10 登录页：账密表单 + 静态公钥加密（Web Crypto SubtleCrypto importKey + encrypt RSA-OAEP）+ Toast i18n
+- T10.11 端到端手测：登录、续期、越权（403）、改密、锁定（5 次失败）、软删、登出、跨标签、SIGTERM 优雅关
+- T10.12 DEV_NOTE 同步：新增 "App 集成模式 (admin)" 小节
+- T10.13 README 同步：admin 启动 + 默认账号 + 操作说明
 
 ### Stage 11 — partner app 复刻
 
-- T11.1–T11.10 同 Stage 10，对 partner（注意 ISO / ISV 两个 role，菜单按权限过滤）
-- 额外：登录后选择"切换视图"控件（前端 only，按你确认仅 UI 切换）
+- T11.1–T11.13 同 Stage 10，对 partner：
+    - `auth.config.ts`：`ALLOWED_CHARACTERS = ['iso','isv']`
+    - repo：限定查询不越出自己 org 子树（org path prefix）
+    - services：`createDownstreamOrgService`（actor 必须含 iso character，产 merchant）+ 子账号管理
+    - API：`/api/partner/orgs/merchant`、`/api/partner/users` (CRUD)
+    - UI：`<CharacterSwitch>` 多 character 用户切换；菜单按 activeCharacter 展示对应树
+    - 测：单 iso、单 isv、双 character 三种 org 的端到端登录与菜单
 
 ### Stage 12 — merchant app 复刻
 
-- T12.1–T12.10 同 Stage 10，对 merchant
+- T12.1–T12.12 同 Stage 10，对 merchant：
+    - `auth.config.ts`：`ALLOWED_CHARACTERS = ['merchant']`
+    - repo / services：限定本 org
+    - API：仅 `/api/merchant/users` (CRUD)，无下游 org 创建路由
+    - 测：单 character 流，重点是软删 / 改权 / 登录续期
 
 ### Stage 13 — 清理 + 文档
 
 - T13.1 删 `better-auth`、`bcryptjs` 依赖；`pnpm install` 干净
 - T13.2 删旧 auth 工具（getSessionTokenFromCookieHeader / buildSessionSnapshot 旧版 / session-role.ts）
 - T13.3 删旧 schema 残留（已在 Stage 1 完成则跳）
-- T13.4 DEV_NOTE：删除 "Better Auth Origin 校验" 小节；新增 "Auth & Permission v1" 总述（snapshot 模型、TTL、错误码表、密码策略、CSP、health/shutdown）
-- T13.5 README：错误码表、登录账号、3 个 app 启动命令、health 检查 URL
-- T13.6 AGENTS.md：部署相关（RSA 生成、SIGTERM/PaaS 配置、CSP 调优）
-- T13.7 WIP.md 清空，写入"下一阶段开发计划占位"
+- T13.4 ESLint 规则：业务包禁直接从 `@cloud/db` 解构 `prisma`（仅允许 `repos`/类型/`path` 工具）
+- T13.5 DEV_NOTE：删除 "Better Auth Origin 校验" 小节；新增 "Auth & Permission v1" 总述（snapshot 模型、TTL、错误码表、密码策略、CSP、health/shutdown、character 体系）
+- T13.6 README：错误码表、登录账号、3 个 app 启动命令、health 检查 URL
+- T13.7 AGENTS.md：部署相关（RSA 生成、SIGTERM/PaaS 配置、CSP 调优）
+- T13.8 WIP.md 清空，写入"下一阶段开发计划占位"
 
 ### 文档同步规则
 
@@ -954,16 +1131,20 @@ BETTER_AUTH_TRUSTED_ORIGINS=...         # 保留：CSRF 校验
 
 ## 附录 B — 决策记录摘要
 
-- **用户域**：单 user 表 + `platform` 字段隔离
-- **租户**：admin 全局；PartnerOrg 带 `isIso/isIsv` 能力位；MerchantOrg 挂 ISO PartnerOrg；ISV 发布 App 经 AppDistribution 分发到 ISO
-- **角色切换**：UI only，BE 永远看 roles 全集（partner 用户可同时持有 iso / isv）
-- **权限 key**：`business.method` 二段（RBAC 标准）
-- **dataScope**：v1 不做
+- **组织模型**：单 `Organization` 表 + Materialized Path（`/` 分隔）+ B-tree `text_pattern_ops` 索引
+- **不用 ltree**：分隔符 `/` 与 ltree 不兼容，且业务最大 3 层无树形复杂度需求
+- **Character**：admin / iso / isv / merchant 4 个，单表声明；不绑 app（app 在 `auth.config.ts` 声明 `ALLOWED_CHARACTERS`）
+- **权限粒度**：Permission 行直接归属一个 character，`(characterId, business, method)` 唯一；多 character 间同名权限视为不同语义
+- **Master**：每 org 1 个；权限由 buildSnapshot 物化（不靠 Checker 短路），为后续黑/白名单 override 留口
+- **子账号**：`UserCharacter` + `UserPermission` 双层；删账号走软删（`deletedAt` + 部分唯一索引保护 email 复用）
+- **菜单**：单 character 归属，多 permission any-of，可嵌套；多 character 用户看并集，UI `<CharacterSwitch>` 切换
+- **快照形状**：`permissions: Record<character, perms[]>`；FE/BE checker 统一三元入参 `(character, businessMethod)`
+- **App 边界**：登录服务校验 `snapshot.characters ∩ ALLOWED_CHARACTERS` 非空；不匹配 → 401 INVALID_CREDENTIALS 不暴露原因
+- **repo 归属**：业务 repo / service 落 `apps/<app>/src/`，`@cloud/db` 仅暴露 prisma 单例 + path 工具 + 类型；`@cloud/auth` 仅基础设施直接用 prisma
 - **密码传输**：静态公钥 + ts 防重放
 - **session 上限**：无（仅 30min sliding）
-- **多端登录**：允许；v1 无 user→sessions 反向索引
+- **多端登录**：允许；v1 无 user→sessions 反向索引；权限变更 / 软删 / admin 改密 30 分钟内不强制下线
 - **登录限频**：账号维度 5/h，锁 1h
-- **菜单**：DB 表 + many-to-many permission
 - **错误国际化**：BE 仅 code + 英文占位，FE 翻译
 - **i18n 库**：next-intl
 - **响应格式**：RESTful 无 success 字段；HTTP status 表示成败
