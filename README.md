@@ -17,7 +17,7 @@ packages/
   cache/        # Redis client、session snapshot 读写
   permissions/  # ABAC PermissionChecker
   config/       # 环境变量校验和公共路径配置
-  security/     # bcryptjs 密码 hash/verify、token hash、敏感字段脱敏
+  security/     # RSA-OAEP 加解密、argon2id 密码 hash/verify、时间戳防重放
 ```
 
 ## Stack
@@ -31,6 +31,16 @@ packages/
 - Zod + React Hook Form
 - Zustand client auth cache
 - Vitest, ESLint, Prettier
+
+## Auth / 密码哈希
+
+- 登录密码走 **RSA-OAEP-SHA256** 传输：FE 拿 `GET /api/auth/public-key` 公钥加密 `{password, ts}`，BE 用根 `.env` 私钥解密。
+- 数据库里存 **argon2id** hash。参数在 `packages/security/src/server/argon2.ts` **硬编码**（`memoryCost=19456, timeCost=2, parallelism=1`，OWASP 2023+ 推荐档），不走 env 配置：
+  - argon2 编码字符串自带参数（`$argon2id$v=19$m=...,t=...,p=...$...`），调整常量不影响旧 hash 的 verify —— 新旧 hash 共存无迁移成本
+  - dev / prod 不会因 env 漂移导致密码不可验证
+  - 想升级算力档（硬件升级后），改 `ARGON2_OPTIONS` 常量、重新 deploy 即可
+- RSA 密钥对生成：`pnpm keys:gen --write`（详见 DEV_NOTE.md「Auth / RSA 登录密钥」节）。
+- 端到端 smoke 验证：`pnpm smoke:auth`（启动 admin dev server 后运行）。
 
 ## Getting Started
 

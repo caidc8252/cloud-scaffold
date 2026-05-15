@@ -12,6 +12,7 @@
   "dependencies": {
     "@cloud/config": "workspace:*",
     "@cloud/db": "workspace:*",
+    "@cloud/security": "workspace:*",
     "@cloud/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "lucide-react": "catalog:",

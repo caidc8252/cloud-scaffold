@@ -21,7 +21,8 @@
       "@cloud/db": ["./packages/db/src/index.ts"],
       "@cloud/permissions": ["./packages/permissions/src/index.ts"],
       "@cloud/request": ["./packages/request/src/index.ts"],
-      "@cloud/security": ["./packages/security/src/index.ts"],
+      "@cloud/security/client": ["./packages/security/src/client/index.ts"],
+      "@cloud/security/server": ["./packages/security/src/server/index.ts"],
       "@cloud/ui": ["./packages/ui/src/index.ts"],
       "@cloud/ui/*": ["./packages/ui/src/*"]
     }

@@ -14,6 +14,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "keys:gen": "pnpm -F @cloud/db exec tsx ../../scripts/generate-rsa-keys.ts",
+    "smoke:auth": "node --conditions=react-server --env-file=.env --import ./packages/db/node_modules/tsx/dist/loader.mjs scripts/smoke-auth.ts",
     "db:generate": "pnpm --filter @cloud/db prisma:generate",
     "db:migrate": "pnpm --filter @cloud/db prisma:migrate",
     "db:deploy": "pnpm --filter @cloud/db prisma:deploy",

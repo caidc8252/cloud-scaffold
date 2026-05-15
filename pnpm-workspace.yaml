@@ -4,15 +4,20 @@ packages:
 
 catalog:
   "@prisma/client": "^7.6.0"
+  "argon2": "^0.41.1"
   "bcryptjs": "^3.0.3"
   "ioredis": "^5.8.2"
   "lucide-react": "^0.552.0"
   "prisma": "^7.6.0"
   "react": "19.2.4"
   "react-dom": "19.2.4"
+  "server-only": "^0.0.1"
   "zod": "^4.4.3"
   "zustand": "^5.0.8"
 
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+
+onlyBuiltDependencies:
+  - argon2

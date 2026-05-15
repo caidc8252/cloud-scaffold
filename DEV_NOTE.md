@@ -84,3 +84,67 @@
 
 - 包间依赖统一使用 `workspace:*`。版本锁在根 `pnpm-workspace.yaml` 的 `catalog:` 中。
 - `@cloud/db` 的 `exports` 字段只暴露 `.`，不要新增子路径导出 —— 入口收敛便于审计。
+- `@cloud/security` 例外：刻意通过 subpath exports 拆 `/client` 与 `/server`，server 子路径首行 `import "server-only"`，防止私钥相关代码进入客户端 bundle。
+
+---
+
+## Auth / RSA 登录密钥
+
+### 决策
+
+- **算法**：RSA-2048 / OAEP / SHA-256。客户端用 Web Crypto `SubtleCrypto`，服务端用 Node `crypto.privateDecrypt`。
+- **密钥来源**：根 `.env` 的 `LOGIN_PUBLIC_KEY_PEM` / `LOGIN_PRIVATE_KEY_PEM`，由 `@cloud/config` 校验后 `getEnv()` 暴露。
+- **静态使用，不做热重载、不做 kid 轮换**。轮换流程 = 改 env + 重启服务。
+- **公钥下发**：每个 app 自带 `GET /api/auth/public-key`（`dynamic = "force-dynamic"`），登录前 FE fetch 一次缓存。**不走 `NEXT_PUBLIC_*` 编译期烘焙**，避免改密钥要重新 build。
+- **私钥隔离**：`@cloud/security/server` 顶部 `import "server-only"` —— 任何 client component 直接或间接 import 都在 Next.js build 期报错。
+
+### 密钥生成
+
+```bash
+# 仅打印到 stdout（用于复制贴到 PaaS 控制台）
+pnpm keys:gen
+
+# 同时写入根 .env 与 .env.example（已存在则跳过，加 --force 覆盖）
+pnpm keys:gen --write
+```
+
+底层用 Node `crypto.generateKeyPairSync('rsa', { modulusLength: 2048, publicKeyEncoding: spki, privateKeyEncoding: pkcs8 })`。
+
+### PEM 在 env 文件里的写法
+
+```env
+# 推荐：多行 quoted（本地 .env）
+LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----
+MIIE...
+-----END PRIVATE KEY-----"
+
+# 兼容：单行 + \n 字面量（PaaS 控制台只能单行时）
+LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----"
+```
+
+`@cloud/config` 的 zod schema 自带 `\n` 字面量 → 真实换行的 transform，两种来源都通过同一个 regex 校验。
+
+### argon2 参数硬编码
+
+`@cloud/security/server/argon2.ts` 把 OWASP 2023+ 推荐档（argon2id, m=19456 KiB, t=2, p=1）写死。调整这些常量**不影响**已存 hash 的 verify —— argon2 编码字符串自带参数（`$argon2id$v=19$m=...,t=...,p=...$...`），新旧 hash 共存无迁移成本。所以不放 env。
+
+### `server-only` 在非 Next.js 场景的解法
+
+`server-only` 包在 module load 期 unconditional throw，任何 vitest / Node CLI 脚本 import 链上一旦碰到就炸。
+
+- **vitest**：`vitest.config.mts` 的 `resolve.alias['server-only']` 指向 `vitest.shims/server-only.ts`（noop）。
+- **Node CLI**：用 `--conditions=react-server` 让 Node 走 `server-only` 的 `react-server` 条件解析（resolves to `empty.js`）。`pnpm smoke:auth` 走这条路径。
+- **Prisma seed 不走这条路**：`packages/db` 不依赖 `@cloud/security`，seed.ts 把 argon2id hash 预先算好以字面量形式 inline，依赖树保持干净。改默认密码时按 seed.ts 注释里的 one-liner 重算 hash 粘贴即可。
+
+### 排障
+
+| 现象 | 检查 |
+|---|---|
+| 启动 ZodError 指明 `LOGIN_*_PEM` 不匹配 | 多半是 PEM 头/尾标记写错，或私钥贴反到公钥变量 |
+| 登录页 `/api/auth/public-key` 500 | 根 `.env` 是否缺 `LOGIN_PUBLIC_KEY_PEM`；`pnpm install` 是否在改 env 后跑过 |
+| 登录解密失败但 ts 正确 | FE bundle 里的公钥与服务端 env 私钥不是同一对（轮换时容易半换） |
+| `Argon2 native binding` 不可用 | `pnpm-workspace.yaml` 的 `onlyBuiltDependencies` 必须包含 `argon2`，pnpm 10 默认禁所有 build script |
+
+### 端到端 smoke
+
+`pnpm smoke:auth` 跑 `scripts/smoke-auth.ts`：fetch 公钥 → encrypt → decrypt → ts 校验 → 用真实 argon2 hash 比对 admin 密码。改 env / 改密钥 / 改 argon2 参数后先跑这个再手测 UI。

@@ -1,0 +1,15 @@
+{
+  "name": "@cloud/security",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client/index.ts",
+    "./server": "./src/server/index.ts"
+  },
+  "dependencies": {
+    "@cloud/config": "workspace:*",
+    "argon2": "catalog:",
+    "server-only": "catalog:"
+  }
+}
