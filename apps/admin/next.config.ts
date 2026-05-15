@@ -20,7 +20,7 @@ if (existsSync(rootEnvPath)) {
 const nextConfig: NextConfig = {
   allowedDevOrigins: [
     "127.0.0.1",
-    "10.*.*.*",
+    "10.0.*.*",
     "192.168.*.*",
     "*.app.github.dev",
     "*.githubpreview.dev",
