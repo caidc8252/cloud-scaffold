@@ -18,8 +18,12 @@ const buttonVariants = cva(
           "border-border bg-background hover:bg-surface-hover aria-expanded:bg-surface-hover active:bg-surface-active dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
           "bg-surface-2 text-content-primary border-line-default shadow-1 hover:bg-surface-hover hover:border-line-strong active:bg-surface-active aria-expanded:bg-surface-hover aria-expanded:border-line-strong",
+        tertiary:
+          "bg-surface-3 text-content-primary hover:bg-surface-hover active:bg-surface-active aria-expanded:bg-surface-hover",
         ghost:
           "hover:bg-surface-hover active:bg-surface-active aria-expanded:bg-surface-hover",
+        "ghost-danger":
+          "text-error hover:bg-error-bg hover:text-error-strong active:bg-error/15 aria-expanded:bg-error-bg focus-visible:border-error-strong/40 focus-visible:ring-error/20",
         destructive:
           "bg-error text-content-inverse shadow-cta hover:brightness-105 active:brightness-95 focus-visible:border-error-strong/40 focus-visible:ring-error/20 bg-clip-border",
         danger:
@@ -56,7 +60,7 @@ interface ButtonProps extends ButtonPrimitive.Props, VariantProps<typeof buttonV
 }
 
 // Clickable action button.
-// variant: 'default'|'primary'|'outline'|'secondary'|'ghost'|'destructive'|'danger'|'link'.
+// variant: 'default'|'primary'|'outline'|'secondary'|'tertiary'|'ghost'|'ghost-danger'|'destructive'|'danger'|'link'.
 // size: 'default'|'xs'|'sm'|'md'|'lg'|'icon'|'icon-xs'|'icon-sm'|'icon-lg'.
 // loading: shows a spinner in place of iconLeft and disables the button.
 // block: sets w-full. iconLeft/iconRight: inline icon slots with auto-spacing.

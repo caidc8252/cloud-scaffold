@@ -86,7 +86,7 @@ export function SelectedStoreTerminals({
               </Button>
               <Button
                 size="icon-sm"
-                variant="ghost"
+                variant="ghost-danger"
                 aria-label="Delete VarSheet"
                 onClick={() => onDeletePending(t)}
               >
