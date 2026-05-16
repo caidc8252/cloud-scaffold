@@ -148,3 +148,51 @@ LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KE
 ### 端到端 smoke
 
 `pnpm smoke:auth` 跑 `scripts/smoke-auth.ts`：fetch 公钥 → encrypt → decrypt → ts 校验 → 用真实 argon2 hash 比对 admin 密码。改 env / 改密钥 / 改 argon2 参数后先跑这个再手测 UI。
+
+---
+
+## Session 与 Redis
+
+### 决策
+
+- **数据形状**：登录成功后写 httpOnly cookie `sid`（base64url 32B 随机），Redis key `session:<sid>` 存 JSON snapshot `{ userId, account, email, permissions[], issuedAt }`。snapshot 不含 password、不含 token，cookie 只是不透明 sid。
+- **TTL 双层 + 解耦**：
+  - Redis TTL **1800s 滚动**（每次 `getSession` 命中 → `EXPIRE` 续命）。Redis 是 session 真值。
+  - Cookie maxAge **12h 固定**（不随活跃续命）。Cookie 只是运输层。
+  - 闲置 30 分钟 → Redis 失效 → 下次 `getSession()` 返 null → `requireSession()` 跳转到 `/api/auth/logout` → Route Handler 清 cookie → /login。
+  - 活跃用户：12h 内 Redis 滚动续命；12h 到 cookie 自然失效一次重登。
+- **单点入口**：`@cloud/auth` 暴露 `getSession() / requireSession()`。
+  - `getSession()` 用 React 19 `cache()` 包裹，**请求内**多次调用只命中 1 次 Redis、touch 1 次。
+  - 跨请求不复用（Server Action 与触发它的页面是不同请求，各自一次 Redis）。这是 Next.js DAL 文章推荐的形态，对调用方而言 page / Server Action / Route Handler 都是同一个 `getSession()`。
+- **proxy.ts 不做鉴权**：中间件不读 Redis、不区分受保护路径。鉴权贴近数据，发生在 layout / page / Server Action / Route Handler 自身代码。
+- **失效 cookie 必清**：DAL 不能在 RSC 渲染上下文里写 cookie（Next.js 限制），所以 `requireSession()` 检测到无效 session 时统一 redirect 到 `/api/auth/logout` Route Handler（可写 cookie），由它清 cookie 再回 `/login`。代价：一次额外 302；收益：cookie 一致性始终保证。
+- **同一个 Route Handler 兼容显式登出**：`/api/auth/logout` 接受 GET（DAL 触发的清理跳转）和 POST（"退出登录"按钮）。语义同质化。
+
+### 包边界
+
+- `@cloud/cache`：**纯 Redis 原语**。`getRedis()` 单例 + `kv.get<T>/set/del/expire` 薄封装。**不**含 session 任何概念（key 命名、TTL、snapshot 形状）。
+- `@cloud/auth`：**Session 业务**。`sessionStore`、`SID_COOKIE`、`SESSION_TTL_SECONDS`、`SID_COOKIE_MAX_AGE_SECONDS`、DAL、login/logout 工具。**不**依赖 `@cloud/db`（user 查询在 app 里完成，把字段塞给 `createSessionFor`）。
+
+### 路由组约定（admin）
+
+- `app/(public)/`：不需要 session（登录页、`/api/auth/public-key`、`/api/auth/logout`）。
+- `app/(authed)/`：需要 session，`layout.tsx` 调 `requireSession()` 兜底。受保护的 Server Action / Route Handler 仍**自己**调一遍（layout 不在 Server Action 调用链上）。
+
+### 改密码 / 禁用用户
+
+本期**不**主动作废其它 session：改密码或禁用后，已存在的旧 session 在 TTL 到期前继续有效（≤ 30min 一致性窗口）。需要"即时踢"再加 `user:<userId>:sids` 索引；本期 YAGNI。
+
+### 测试
+
+- 单测覆盖 `kv`、`sessionStore`、DAL（mock cookies + sessionStore + redirect）、login/logout actions。
+- E2E 走 Playwright：`pnpm --filter admin e2e`。覆盖未登录跳转、错密码、登录成功、显式登出、失效 sid 清理。
+- 现存 `pnpm smoke:auth` 验证 RSA + argon2 通路，与 session 正交，保留。
+
+### 排障
+
+| 现象 | 检查 |
+|---|---|
+| 登录后访问 `/` 又被踢回 `/login` | Redis 起没起；`docker compose ps` 看 redis；env `REDIS_URL` 是否对 |
+| 改 password seed 后 session 不失效 | 预期：session 是独立生命周期，30min 内不踢。要立即生效手动 redis-cli `DEL session:<sid>` 或重登 |
+| middleware 想读 session | 不要在 proxy.ts 里读 Redis；改 layout 或 page 里的 `requireSession()` |
+| Server Action 内 `getSession()` 又查了一次 Redis | 正常：Server Action 与触发它的页面是不同请求，cache() 不跨请求 |

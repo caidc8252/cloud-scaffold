@@ -39,7 +39,7 @@ export async function rsaEncrypt(
   const spkiBytes = pemToSpkiBytes(publicKeyPem);
   const key = await subtle.importKey(
     "spki",
-    spkiBytes,
+    spkiBytes as BufferSource,
     { name: "RSA-OAEP", hash: "SHA-256" },
     false,
     ["encrypt"],

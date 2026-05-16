@@ -21,6 +21,10 @@ const eslintConfig = defineConfig([
     "packages/db/src/generated/**",
     "next-env.d.ts",
     "apps/*/next-env.d.ts",
+    ".claude/**",
+    ".agents/**",
+    "apps/*/test-results/**",
+    "apps/*/playwright-report/**",
   ]),
 ]);
 

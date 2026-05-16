@@ -7,9 +7,12 @@
     "dev": "next dev --port 3002",
     "build": "next build",
     "start": "next start --port 3002",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
+    "@cloud/auth": "workspace:*",
     "@cloud/config": "workspace:*",
     "@cloud/db": "workspace:*",
     "@cloud/security": "workspace:*",
@@ -23,6 +26,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

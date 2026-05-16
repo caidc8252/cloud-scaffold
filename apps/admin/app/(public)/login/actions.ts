@@ -1,7 +1,7 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { createSessionFor } from "@cloud/auth";
 import { getEnv } from "@cloud/config";
 import { prisma } from "@cloud/db";
 import {
@@ -47,18 +47,24 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
 
   const user = await prisma.user.findUnique({
     where: { account },
-    select: { account: true, password: true },
+    select: {
+      id: true,
+      account: true,
+      email: true,
+      password: true,
+      permissions: true,
+    },
   });
 
   if (!user || !(await verifyPassword(user.password, password))) {
     return { error: "账号或密码错误" };
   }
 
-  const store = await cookies();
-  store.set("admin_account", user.account, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
+  await createSessionFor({
+    userId: user.id,
+    account: user.account,
+    email: user.email,
+    permissions: user.permissions,
   });
 
   redirect("/");
