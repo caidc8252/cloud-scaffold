@@ -21,16 +21,16 @@ export interface FieldProps {
 export const Field: React.FC<FieldProps> = ({ label, hint, error, required, htmlFor, className, children }) => (
   <div className={cn('flex flex-col gap-2', className)}>
     {label && (
-      <Label htmlFor={htmlFor}>
+      <Label htmlFor={htmlFor} className="text-[13px] font-medium text-content-secondary">
         {label}
-        {required && <span className="ml-0.5 text-destructive" aria-hidden>*</span>}
+        {required && <span className="text-error" aria-hidden> *</span>}
       </Label>
     )}
     {children}
     {error ? (
-      <p role="alert" className="text-xs text-destructive">{error}</p>
+      <p role="alert" className="text-xs text-error">{error}</p>
     ) : hint ? (
-      <p className="text-xs text-muted-foreground">{hint}</p>
+      <p className="text-xs text-content-tertiary">{hint}</p>
     ) : null}
   </div>
 )

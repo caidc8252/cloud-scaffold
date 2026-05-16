@@ -95,8 +95,8 @@ function ChipMulti({
             onClick={() => onChange(on ? value.filter((v) => v !== opt) : [...value, opt])}
             className={
               on
-                ? 'px-2.5 py-1 rounded-full text-[12px] font-medium bg-primary-50 text-primary-700 border border-primary-200'
-                : 'px-2.5 py-1 rounded-full text-[12px] font-medium bg-surface-2 text-content-secondary border border-line-default hover:bg-surface-hover'
+                ? 'px-2.5 py-1 rounded-full text-[12px] font-medium cursor-pointer bg-primary-50 text-primary-700 border border-primary-200'
+                : 'px-2.5 py-1 rounded-full text-[12px] font-medium cursor-pointer bg-surface-2 text-content-secondary border border-line-default hover:bg-surface-hover'
             }
           >
             {opt}

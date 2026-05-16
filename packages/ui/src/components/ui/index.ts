@@ -14,10 +14,6 @@ export { Checkbox } from './checkbox'
 export { RadioGroup, RadioGroupItem } from './radio-group'
 export { Switch } from './switch'
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants } from './tabs'
-export {
-  Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter,
-  DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger,
-} from './dialog'
 export { Modal, type ModalProps } from './modal'
 export { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, MenuItem, type MenuItemProps } from './popover'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'

@@ -27,7 +27,7 @@ export function VarSheetForm({ stores, vs, setField }: VarSheetFormProps) {
 
   return (
     <Tabs value={section} onValueChange={(v) => setSection(v as VarSheetSectionId)}>
-      <TabsList variant="line" className="w-full justify-start overflow-x-auto">
+      <TabsList variant="line" className="w-full justify-start">
         {VAR_SHEET_SECTIONS.map((s) => (
           <TabsTrigger key={s.id} value={s.id}>
             {s.label}
@@ -35,26 +35,24 @@ export function VarSheetForm({ stores, vs, setField }: VarSheetFormProps) {
         ))}
       </TabsList>
 
-      <div className="max-h-[420px] overflow-y-auto pr-1 pt-2">
-        <TabsContent value="identity">
-          <IdentitySection vs={vs} setField={setField} selectedStore={selectedStore} />
-        </TabsContent>
-        <TabsContent value="acquirer">
-          <AcquirerSection vs={vs} setField={setField} />
-        </TabsContent>
-        <TabsContent value="ops">
-          <OpsSection vs={vs} setField={setField} />
-        </TabsContent>
-        <TabsContent value="cards">
-          <CardsSection vs={vs} setField={setField} />
-        </TabsContent>
-        <TabsContent value="features">
-          <FeaturesSection vs={vs} setField={setField} />
-        </TabsContent>
-        <TabsContent value="security">
-          <SecuritySection vs={vs} setField={setField} />
-        </TabsContent>
-      </div>
+      <TabsContent value="identity">
+        <IdentitySection vs={vs} setField={setField} selectedStore={selectedStore} />
+      </TabsContent>
+      <TabsContent value="acquirer">
+        <AcquirerSection vs={vs} setField={setField} />
+      </TabsContent>
+      <TabsContent value="ops">
+        <OpsSection vs={vs} setField={setField} />
+      </TabsContent>
+      <TabsContent value="cards">
+        <CardsSection vs={vs} setField={setField} />
+      </TabsContent>
+      <TabsContent value="features">
+        <FeaturesSection vs={vs} setField={setField} />
+      </TabsContent>
+      <TabsContent value="security">
+        <SecuritySection vs={vs} setField={setField} />
+      </TabsContent>
     </Tabs>
   )
 }

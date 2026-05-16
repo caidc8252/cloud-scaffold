@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { ScanLine, Check, X, Trash2, Sparkles } from 'lucide-react'
 import {
   Button, Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-  Checkbox, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Progress,
+  Checkbox, Modal, Progress,
 } from '@cloud/ui'
 import { fakeSerialNumber, type Order, type OrderDevice, type OrderItem } from '@/lib/data/orders'
 
@@ -221,31 +221,34 @@ export function ActivationTab({ order, onUpdate, readonly }: {
         </div>
 
         {/* Unbind confirmation dialog */}
-        <Dialog open={!!removeTarget} onOpenChange={() => setRemoveTarget(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Unbind device</DialogTitle>
-              <DialogDescription>
-                Remove <strong className="text-content-primary font-mono">{removeTarget?.sn}</strong> ({removeTarget?.modelName}) from this order? The device will return to inventory and a new activation code can be issued.
-              </DialogDescription>
-            </DialogHeader>
-            <label className="flex items-start gap-2.5 p-3 bg-surface-2 border border-line-subtle rounded-lg cursor-pointer mt-2">
-              <Checkbox checked={factoryReset} onCheckedChange={(v) => setFactoryReset(!!v)} className="mt-0.5" />
-              <div>
-                <div className="text-[13px] font-medium text-content-primary">Also factory-reset the device</div>
-                <div className="text-xs text-content-tertiary mt-0.5">
-                  Sends a reset signal so the device wipes its config the next time it comes online. Leave unchecked if the unit will be re-bound to another order.
-                </div>
-              </div>
-            </label>
-            <DialogFooter>
-              <Button variant="secondary" onClick={() => setRemoveTarget(null)}>Cancel</Button>
+        <Modal
+          open={!!removeTarget}
+          onClose={() => setRemoveTarget(null)}
+          title="Unbind device"
+          description={
+            <>
+              Remove <strong className="text-content-primary font-mono">{removeTarget?.sn}</strong> ({removeTarget?.modelName}) from this order? The device will return to inventory and a new activation code can be issued.
+            </>
+          }
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setRemoveTarget(null)}>Cancel</Button>
               <Button variant="primary" onClick={confirmRemove}>
                 <Trash2 size={14} /> {factoryReset ? 'Unbind & factory reset' : 'Unbind device'}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </>
+          }
+        >
+          <label className="flex items-start gap-2.5 p-3 bg-surface-2 border border-line-subtle rounded-lg cursor-pointer">
+            <Checkbox checked={factoryReset} onCheckedChange={(v) => setFactoryReset(!!v)} className="mt-0.5" />
+            <div>
+              <div className="text-[13px] font-medium text-content-primary">Also factory-reset the device</div>
+              <div className="text-xs text-content-tertiary mt-0.5">
+                Sends a reset signal so the device wipes its config the next time it comes online. Leave unchecked if the unit will be re-bound to another order.
+              </div>
+            </div>
+          </label>
+        </Modal>
 
         {allDevices.length === 0 ? (
           <div className="py-9 text-center">

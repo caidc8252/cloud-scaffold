@@ -65,7 +65,7 @@ export function StoreFormModal({ open, mode, merchant, store, onClose, onSave, o
             </Button>
           )}
           <div className="flex-1" />
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button

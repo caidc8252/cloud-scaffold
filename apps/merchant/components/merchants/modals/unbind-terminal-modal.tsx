@@ -23,7 +23,7 @@ export function UnbindTerminalModal({ open, merchant, terminal, onClose, onConfi
       description="Unbinding clears the device from this VarSheet. The VarSheet stays in place — you can bind a different device later."
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button variant="destructive" iconLeft={<Unlink size={14} />} onClick={onConfirm}>

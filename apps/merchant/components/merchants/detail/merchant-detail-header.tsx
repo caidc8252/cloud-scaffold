@@ -19,7 +19,7 @@ export function MerchantDetailHeader({ merchant, onEdit }: MerchantDetailHeaderP
       <button
         type="button"
         onClick={() => router.push('/merchants')}
-        className="p-1 rounded-md text-content-tertiary hover:bg-surface-hover hover:text-content-primary"
+        className="p-1 rounded-md cursor-pointer text-content-tertiary hover:bg-surface-hover hover:text-content-primary"
         aria-label="Back to merchants"
       >
         <ChevronLeft size={16} />

@@ -74,7 +74,7 @@ export function InstallTerminalModal({ open, merchant, terminal, onClose, onConf
       description="Enter the 6-digit code shown on the terminal screen. The system will match it to a device and bind that SN to this VarSheet."
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button

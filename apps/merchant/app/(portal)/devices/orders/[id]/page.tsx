@@ -6,8 +6,7 @@ import { toast } from 'sonner'
 import { ChevronLeft, Download, Gift, Check, Truck, CreditCard, Clock, Users } from 'lucide-react'
 import {
   Badge, Button, Tabs, TabsList, TabsTrigger, TabsContent,
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-  Input, Field, Slider,
+  Modal, Input, Field, Slider,
 } from '@cloud/ui'
 import { CompanyLogo } from '@/components/layout/company-logo'
 import { SEED_ORDERS, ORDER_STATUS_TONE, moneyUsd, orderTotal, orderSubtotal, deviceProgress,
@@ -218,102 +217,110 @@ export default function OrderDetailPage() {
       </Tabs>
 
       {/* Mark-paid dialog */}
-      <Dialog open={payOpen} onOpenChange={setPayOpen}>
-        <DialogContent className="max-w-[560px]">
-          <DialogHeader>
-            <DialogTitle>Record payment</DialogTitle>
-            <DialogDescription>
-              How did <strong className="text-content-primary">{order.customerName}</strong> pay <span className="tabular-nums">{moneyUsd(total)}</span> for this order?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-2 mt-2">
-            {PAYMENT_METHODS.map(m => {
-              const active = payMethod === m.id
-              return (
-                <label key={m.id} className={[
-                  'flex gap-3 items-start p-3 rounded-xl border-1.5 cursor-pointer transition-colors',
-                  active ? 'border-content-primary bg-surface-subtle' : 'border-line-default bg-surface-2',
-                ].join(' ')}>
-                  <input type="radio" name="payMethod" checked={active} onChange={() => setPayMethod(m.id)} className="mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13.5px] font-medium text-content-primary">{m.label}</div>
-                    <div className="text-xs text-content-tertiary mt-0.5">{m.desc}</div>
-                  </div>
-                </label>
-              )
-            })}
-          </div>
-          {payMethod === 'other' && (
-            <div className="mt-3">
-              <Field label="Specify method"><Input value={payOther} onChange={e => setPayOther(e.target.value)} placeholder="e.g. crypto, barter, escrow release…" /></Field>
-            </div>
-          )}
-          <div className="mt-3">
-            <Field label={`Reference / receipt no. ${payMethod === 'cash' ? '(optional)' : ''}`}>
-              <Input value={payRef} onChange={e => setPayRef(e.target.value)} placeholder={
-                payMethod === 'wire' ? 'e.g. WT-2026-04-22-118832' :
-                payMethod === 'check' ? 'e.g. Check #4421' :
-                payMethod === 'card' ? 'Last 4 / auth code' :
-                payMethod === 'ach' ? 'ACH trace number' :
-                payMethod === 'offset' ? 'Credit memo ID' : 'Internal reference (optional)'
-              } />
-            </Field>
-          </div>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setPayOpen(false)}>Cancel</Button>
+      <Modal
+        open={payOpen}
+        onClose={() => setPayOpen(false)}
+        className="sm:max-w-[560px]"
+        title="Record payment"
+        description={
+          <>
+            How did <strong className="text-content-primary">{order.customerName}</strong> pay <span className="tabular-nums">{moneyUsd(total)}</span> for this order?
+          </>
+        }
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setPayOpen(false)}>Cancel</Button>
             <Button variant="primary" onClick={confirmPaid}><Check size={14} /> Confirm payment</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="grid gap-2">
+          {PAYMENT_METHODS.map(m => {
+            const active = payMethod === m.id
+            return (
+              <label key={m.id} className={[
+                'flex gap-3 items-start p-3 rounded-xl border-1.5 cursor-pointer transition-colors',
+                active ? 'border-content-primary bg-surface-subtle' : 'border-line-default bg-surface-2',
+              ].join(' ')}>
+                <input type="radio" name="payMethod" checked={active} onChange={() => setPayMethod(m.id)} className="mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13.5px] font-medium text-content-primary">{m.label}</div>
+                  <div className="text-xs text-content-tertiary mt-0.5">{m.desc}</div>
+                </div>
+              </label>
+            )
+          })}
+        </div>
+        {payMethod === 'other' && (
+          <div className="mt-3">
+            <Field label="Specify method"><Input value={payOther} onChange={e => setPayOther(e.target.value)} placeholder="e.g. crypto, barter, escrow release…" /></Field>
+          </div>
+        )}
+        <div className="mt-3">
+          <Field label={`Reference / receipt no. ${payMethod === 'cash' ? '(optional)' : ''}`}>
+            <Input value={payRef} onChange={e => setPayRef(e.target.value)} placeholder={
+              payMethod === 'wire' ? 'e.g. WT-2026-04-22-118832' :
+              payMethod === 'check' ? 'e.g. Check #4421' :
+              payMethod === 'card' ? 'Last 4 / auth code' :
+              payMethod === 'ach' ? 'ACH trace number' :
+              payMethod === 'offset' ? 'Credit memo ID' : 'Internal reference (optional)'
+            } />
+          </Field>
+        </div>
+      </Modal>
 
       {/* Edit discount dialog */}
-      <Dialog open={discOpen} onOpenChange={setDiscOpen}>
-        <DialogContent className="max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle>{order.discountPct > 0 ? 'Edit discount' : 'Apply discount'}</DialogTitle>
-            <DialogDescription>
-              Lower the price for this order — anywhere from 0% to fully complimentary.
-              Subtotal is <span className="tabular-nums">{moneyUsd(subtotal)}</span>.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center gap-3 mb-2.5">
-            <Input type="number" min={0} max={100} step={1} value={discDraft}
-              onChange={e => setDiscDraft(Number(e.target.value))}
-              className="w-[110px] text-right font-mono" />
-            <div className="text-[13px] text-content-secondary">% off</div>
-            <div className="flex-1" />
-            <div className={`tabular-nums text-[15px] font-semibold ${(Number(discDraft) || 0) === 100 ? 'text-success' : 'text-content-primary'}`}>
-              {(Number(discDraft) || 0) === 100 ? 'FREE' : moneyUsd(subtotal * (1 - (Number(discDraft) || 0) / 100))}
-            </div>
-          </div>
-          <Slider value={[Number(discDraft) || 0] as const} onValueChange={(v) => { const n = Array.isArray(v) ? v[0] : v; if (n !== undefined) setDiscDraft(n) }} min={0} max={100} step={1} />
-          <div className="flex gap-1.5 mt-2.5 flex-wrap">
-            {[0, 5, 10, 25, 50, 100].map(p => (
-              <button key={p} type="button" onClick={() => setDiscDraft(p)}
-                className={['px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors cursor-pointer',
-                  Number(discDraft) === p ? 'bg-primary-700 text-white border-primary-700' : 'bg-surface-2 text-content-secondary border-line-default hover:border-line-strong',
-                ].join(' ')}>
-                {p === 100 ? 'Free' : p + '%'}
-              </button>
-            ))}
-          </div>
-          <div className="mt-3.5">
-            <Field label="Reason (recorded in history)">
-              <Input value={discReason} onChange={e => setDiscReason(e.target.value)} placeholder="e.g. partner pilot, exec approval, demo unit…" />
-            </Field>
-          </div>
-          {(Number(discDraft) || 0) !== (order.discountPct || 0) && order.status === 'Awaiting payment' && (Number(discDraft) || 0) === 100 && (
-            <div className="mt-3 p-3 rounded-lg bg-success-50 border border-success/25 text-success text-sm flex items-start gap-2.5">
-              <Check size={14} className="shrink-0 mt-px" />
-              <div>This order will no longer require payment — status will jump to <strong>Awaiting shipment</strong> on save.</div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setDiscOpen(false)}>Cancel</Button>
+      <Modal
+        open={discOpen}
+        onClose={() => setDiscOpen(false)}
+        className="sm:max-w-[480px]"
+        title={order.discountPct > 0 ? 'Edit discount' : 'Apply discount'}
+        description={
+          <>
+            Lower the price for this order — anywhere from 0% to fully complimentary.
+            Subtotal is <span className="tabular-nums">{moneyUsd(subtotal)}</span>.
+          </>
+        }
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDiscOpen(false)}>Cancel</Button>
             <Button variant="primary" onClick={applyDiscount}><Check size={14} /> Save discount</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="flex items-center gap-3 mb-2.5">
+          <Input type="number" min={0} max={100} step={1} value={discDraft}
+            onChange={e => setDiscDraft(Number(e.target.value))}
+            className="w-[110px] text-right font-mono" />
+          <div className="text-[13px] text-content-secondary">% off</div>
+          <div className="flex-1" />
+          <div className={`tabular-nums text-[15px] font-semibold ${(Number(discDraft) || 0) === 100 ? 'text-success' : 'text-content-primary'}`}>
+            {(Number(discDraft) || 0) === 100 ? 'FREE' : moneyUsd(subtotal * (1 - (Number(discDraft) || 0) / 100))}
+          </div>
+        </div>
+        <Slider value={[Number(discDraft) || 0] as const} onValueChange={(v) => { const n = Array.isArray(v) ? v[0] : v; if (n !== undefined) setDiscDraft(n) }} min={0} max={100} step={1} />
+        <div className="flex gap-1.5 mt-2.5 flex-wrap">
+          {[0, 5, 10, 25, 50, 100].map(p => (
+            <button key={p} type="button" onClick={() => setDiscDraft(p)}
+              className={['px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors cursor-pointer',
+                Number(discDraft) === p ? 'bg-primary-700 text-white border-primary-700' : 'bg-surface-2 text-content-secondary border-line-default hover:border-line-strong',
+              ].join(' ')}>
+              {p === 100 ? 'Free' : p + '%'}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3.5">
+          <Field label="Reason (recorded in history)">
+            <Input value={discReason} onChange={e => setDiscReason(e.target.value)} placeholder="e.g. partner pilot, exec approval, demo unit…" />
+          </Field>
+        </div>
+        {(Number(discDraft) || 0) !== (order.discountPct || 0) && order.status === 'Awaiting payment' && (Number(discDraft) || 0) === 100 && (
+          <div className="mt-3 p-3 rounded-lg bg-success-50 border border-success/25 text-success text-sm flex items-start gap-2.5">
+            <Check size={14} className="shrink-0 mt-px" />
+            <div>This order will no longer require payment — status will jump to <strong>Awaiting shipment</strong> on save.</div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

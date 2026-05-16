@@ -18,7 +18,7 @@ export function StoreDetailsModal({ open, store, onClose }: StoreDetailsModalPro
       title={store.name}
       description={store.isHQ ? 'Headquarter — auto-created with the merchant.' : 'Store details'}
       footer={
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="ghost" onClick={onClose}>
           Close
         </Button>
       }

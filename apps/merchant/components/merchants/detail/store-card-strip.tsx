@@ -88,7 +88,7 @@ export function StoreCardStrip({ merchant, selectedStoreId, onSelectStore, onAdd
               <button
                 type="button"
                 onClick={() => setQuery('')}
-                className="text-content-tertiary hover:text-content-primary"
+                className="cursor-pointer text-content-tertiary hover:text-content-primary"
                 aria-label="Clear filter"
               >
                 <X size={12} />
@@ -121,7 +121,7 @@ export function StoreCardStrip({ merchant, selectedStoreId, onSelectStore, onAdd
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="text-primary-700 underline bg-transparent"
+              className="cursor-pointer text-primary-700 underline bg-transparent"
             >
               Clear filter
             </button>
@@ -156,7 +156,7 @@ function StoreCard({ store, terminalCount, selected, onSelect }: StoreCardProps)
       type="button"
       data-store-id={store.id}
       onClick={onSelect}
-      className={`shrink-0 min-w-[180px] max-w-[220px] px-3.5 py-3 text-left rounded-lg border transition-all duration-fast flex flex-col gap-1 ${
+      className={`shrink-0 min-w-[180px] max-w-[220px] px-3.5 py-3 text-left rounded-lg border cursor-pointer transition-all duration-fast flex flex-col gap-1 ${
         selected
           ? 'bg-primary-50 border-primary-500 ring-[3px] ring-primary-500/10'
           : 'bg-surface-2 border-line-default shadow-1 hover:bg-surface-hover'
@@ -193,7 +193,7 @@ function AddStoreCard({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="shrink-0 min-w-[140px] px-3.5 py-3 text-center rounded-lg bg-surface-2 border-[1.5px] border-dashed border-line-default text-content-secondary hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 transition-colors flex flex-col items-center gap-1.5"
+      className="shrink-0 min-w-[140px] px-3.5 py-3 text-center rounded-lg cursor-pointer bg-surface-2 border-[1.5px] border-dashed border-line-default text-content-secondary hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 transition-colors flex flex-col items-center gap-1.5"
     >
       <Plus size={16} strokeWidth={1.8} />
       <span className="text-xs font-medium">Add store</span>

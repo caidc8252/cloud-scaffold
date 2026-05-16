@@ -2,15 +2,9 @@
 
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/utils"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   InputGroup,
   InputGroupAddon,
@@ -39,31 +33,29 @@ function CommandDialog({
   description = "Search for a command to run...",
   children,
   className,
-  showCloseButton = false,
   ...props
-}: Omit<React.ComponentProps<typeof Dialog>, "children"> & {
+}: Omit<DialogPrimitive.Root.Props, "children"> & {
   title?: string
   description?: string
   className?: string
-  showCloseButton?: boolean
   children: React.ReactNode
 }) {
   return (
-    <Dialog {...props}>
-      <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
-      <DialogContent
-        className={cn(
-          "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0",
-          className
-        )}
-        showCloseButton={showCloseButton}
-      >
-        {children}
-      </DialogContent>
-    </Dialog>
+    <DialogPrimitive.Root {...props}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Backdrop className="fixed inset-0 isolate z-modal bg-surface-overlay duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+        <DialogPrimitive.Popup
+          className={cn(
+            "fixed top-1/3 left-1/2 z-modal w-full max-w-[calc(100%-2rem)] sm:max-w-[460px] -translate-x-1/2 overflow-hidden rounded-xl border border-line-default bg-popover text-popover-foreground shadow-5 outline-none duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            className
+          )}
+        >
+          <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
+          <DialogPrimitive.Description className="sr-only">{description}</DialogPrimitive.Description>
+          {children}
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }
 

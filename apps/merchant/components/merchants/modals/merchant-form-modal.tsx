@@ -74,7 +74,7 @@ export function MerchantFormModal({ open, mode, merchant, onClose, onSave }: Mer
       }
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button
@@ -140,7 +140,7 @@ export function MerchantFormModal({ open, mode, merchant, onClose, onSave }: Mer
                 <button
                   type="button"
                   onClick={() => setTags(tags.filter((x) => x !== t))}
-                  className="p-0.5 rounded-full hover:bg-primary-100"
+                  className="p-0.5 rounded-full cursor-pointer hover:bg-primary-100"
                   aria-label={`Remove ${t}`}
                 >
                   <X size={10} strokeWidth={2.5} />

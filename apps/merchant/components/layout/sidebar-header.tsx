@@ -85,7 +85,7 @@ function TenantRow({
       onClick={onSelect}
       role="menuitemradio"
       aria-checked={active}
-      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-left transition-colors ${
+      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-left cursor-pointer transition-colors ${
         active ? 'bg-surface-active' : 'hover:bg-surface-hover'
       }`}
     >

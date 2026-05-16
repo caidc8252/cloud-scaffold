@@ -77,7 +77,7 @@ export function TerminalFormModal({
             </Button>
           )}
           <div className="flex-1" />
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button
@@ -107,8 +107,8 @@ export function TerminalFormModal({
                 onClick={() => setEntryMode(opt.id)}
                 className={
                   on
-                    ? 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm text-xs font-medium bg-surface-2 text-content-primary shadow-1'
-                    : 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm text-xs text-content-secondary hover:text-content-primary'
+                    ? 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm text-xs font-medium cursor-pointer bg-surface-2 text-content-primary shadow-1'
+                    : 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm text-xs cursor-pointer text-content-secondary hover:text-content-primary'
                 }
               >
                 {opt.label}

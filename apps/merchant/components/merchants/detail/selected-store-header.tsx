@@ -42,7 +42,7 @@ export function SelectedStoreHeader({ store, onEdit, onDelete }: SelectedStoreHe
             onClick={copyAddress}
             title="Copy address"
             aria-label="Copy address"
-            className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-sm text-content-tertiary hover:bg-surface-hover hover:text-content-primary transition-colors shrink-0"
+            className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-sm cursor-pointer text-content-tertiary hover:bg-surface-hover hover:text-content-primary transition-colors shrink-0"
           >
             <Copy size={12} />
           </button>

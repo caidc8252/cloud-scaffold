@@ -32,7 +32,7 @@ export function ConfirmDialog({
       description={description}
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button variant="destructive" disabled={confirmDisabled} onClick={onConfirm}>
