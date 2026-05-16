@@ -61,7 +61,7 @@ export function BulkImportPanel({ merchant, stores, onCommit }: BulkImportPanelP
     <div className="flex flex-col gap-3">
       <Alert variant="info">
         <AlertDescription>
-          Upload a CSV/XLSX with one VarSheet per row. <a className="underline">Download template (.xlsx)</a>. Up to 500
+          Upload a CSV/XLSX with one VarSheet per row. <Button variant="link">Download template (.xlsx)</Button>. Up to 500
           rows; previews limited to the first 10.
         </AlertDescription>
       </Alert>
