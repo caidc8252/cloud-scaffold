@@ -15,9 +15,9 @@ const sessionStoreMock = {
   destroy: vi.fn(),
 };
 
-vi.mock("../src/session.ts", async () => {
-  const actual = await vi.importActual<typeof import("../src/session.ts")>(
-    "../src/session.ts",
+vi.mock("../src/server/session.ts", async () => {
+  const actual = await vi.importActual<typeof import("../src/server/session.ts")>(
+    "../src/server/session.ts",
   );
   return {
     ...actual,
@@ -37,10 +37,10 @@ describe("createSessionFor", () => {
   it("writes session in store and sets sid cookie with hardened attrs", async () => {
     sessionStoreMock.create.mockResolvedValueOnce({ sid: "fresh-sid" });
     const { createSessionFor, SID_COOKIE, SID_COOKIE_MAX_AGE_SECONDS } = await import(
-      "../src/actions.ts"
+      "../src/server/actions.ts"
     ).then(async (m) => ({
       ...m,
-      ...(await import("../src/session.ts")),
+      ...(await import("../src/server/session.ts")),
     }));
 
     await createSessionFor({
@@ -73,8 +73,8 @@ describe("destroyCurrentSession", () => {
   it("deletes redis entry and clears cookie when sid present", async () => {
     cookieStore.get.mockReturnValueOnce({ value: "abc" });
     sessionStoreMock.destroy.mockResolvedValueOnce(undefined);
-    const { destroyCurrentSession } = await import("../src/actions.ts");
-    const { SID_COOKIE } = await import("../src/session.ts");
+    const { destroyCurrentSession } = await import("../src/server/actions.ts");
+    const { SID_COOKIE } = await import("../src/server/session.ts");
 
     await destroyCurrentSession();
 
@@ -84,8 +84,8 @@ describe("destroyCurrentSession", () => {
 
   it("still clears cookie when no sid present (idempotent)", async () => {
     cookieStore.get.mockReturnValueOnce(undefined);
-    const { destroyCurrentSession } = await import("../src/actions.ts");
-    const { SID_COOKIE } = await import("../src/session.ts");
+    const { destroyCurrentSession } = await import("../src/server/actions.ts");
+    const { SID_COOKIE } = await import("../src/server/session.ts");
 
     await destroyCurrentSession();
 

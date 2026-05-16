@@ -16,7 +16,7 @@ beforeEach(() => {
 describe("sessionStore", () => {
   it("create writes session:<sid> with TTL and returns sid", async () => {
     kvMock.set.mockResolvedValueOnce(undefined);
-    const { sessionStore, SESSION_TTL_SECONDS } = await import("../src/session.ts");
+    const { sessionStore, SESSION_TTL_SECONDS } = await import("../src/server/session.ts");
     const { sid } = await sessionStore.create({
       userId: "u1",
       account: "alice",
@@ -40,7 +40,7 @@ describe("sessionStore", () => {
 
   it("read returns null when redis returns null", async () => {
     kvMock.get.mockResolvedValueOnce(null);
-    const { sessionStore } = await import("../src/session.ts");
+    const { sessionStore } = await import("../src/server/session.ts");
     expect(await sessionStore.read("nope")).toBeNull();
     expect(kvMock.get).toHaveBeenCalledWith("session:nope");
   });
@@ -54,18 +54,18 @@ describe("sessionStore", () => {
       issuedAt: 123,
     };
     kvMock.get.mockResolvedValueOnce(snapshot);
-    const { sessionStore } = await import("../src/session.ts");
+    const { sessionStore } = await import("../src/server/session.ts");
     expect(await sessionStore.read("abc")).toEqual(snapshot);
   });
 
   it("touch calls expire with SESSION_TTL_SECONDS", async () => {
-    const { sessionStore, SESSION_TTL_SECONDS } = await import("../src/session.ts");
+    const { sessionStore, SESSION_TTL_SECONDS } = await import("../src/server/session.ts");
     await sessionStore.touch("abc");
     expect(kvMock.expire).toHaveBeenCalledWith("session:abc", SESSION_TTL_SECONDS);
   });
 
   it("destroy calls del", async () => {
-    const { sessionStore } = await import("../src/session.ts");
+    const { sessionStore } = await import("../src/server/session.ts");
     await sessionStore.destroy("abc");
     expect(kvMock.del).toHaveBeenCalledWith("session:abc");
   });

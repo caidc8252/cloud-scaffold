@@ -21,9 +21,9 @@ const sessionStoreMock = {
   touch: vi.fn(),
 };
 
-vi.mock("../src/session.ts", async () => {
-  const actual = await vi.importActual<typeof import("../src/session.ts")>(
-    "../src/session.ts",
+vi.mock("../src/server/session.ts", async () => {
+  const actual = await vi.importActual<typeof import("../src/server/session.ts")>(
+    "../src/server/session.ts",
   );
   return {
     ...actual,
@@ -41,7 +41,7 @@ beforeEach(() => {
 describe("getSession", () => {
   it("returns null when no sid cookie present", async () => {
     cookieStore.get.mockReturnValueOnce(undefined);
-    const { getSession } = await import("../src/dal.ts");
+    const { getSession } = await import("../src/server/dal.ts");
     expect(await getSession()).toBeNull();
     expect(sessionStoreMock.read).not.toHaveBeenCalled();
   });
@@ -49,7 +49,7 @@ describe("getSession", () => {
   it("returns null when sid present but redis returns null", async () => {
     cookieStore.get.mockReturnValueOnce({ value: "stale" });
     sessionStoreMock.read.mockResolvedValueOnce(null);
-    const { getSession } = await import("../src/dal.ts");
+    const { getSession } = await import("../src/server/dal.ts");
     expect(await getSession()).toBeNull();
     expect(sessionStoreMock.touch).not.toHaveBeenCalled();
   });
@@ -65,7 +65,7 @@ describe("getSession", () => {
     cookieStore.get.mockReturnValueOnce({ value: "valid" });
     sessionStoreMock.read.mockResolvedValueOnce(snapshot);
     sessionStoreMock.touch.mockResolvedValueOnce(undefined);
-    const { getSession } = await import("../src/dal.ts");
+    const { getSession } = await import("../src/server/dal.ts");
     expect(await getSession()).toEqual(snapshot);
     expect(sessionStoreMock.touch).toHaveBeenCalledWith("valid");
   });
@@ -74,7 +74,7 @@ describe("getSession", () => {
 describe("requireSession", () => {
   it("redirects to /api/auth/logout when no session", async () => {
     cookieStore.get.mockReturnValueOnce(undefined);
-    const { requireSession } = await import("../src/dal.ts");
+    const { requireSession } = await import("../src/server/dal.ts");
     await expect(requireSession()).rejects.toThrow("__REDIRECT__:/api/auth/logout");
     expect(redirectMock).toHaveBeenCalledWith("/api/auth/logout");
   });
@@ -90,7 +90,7 @@ describe("requireSession", () => {
     cookieStore.get.mockReturnValueOnce({ value: "valid" });
     sessionStoreMock.read.mockResolvedValueOnce(snapshot);
     sessionStoreMock.touch.mockResolvedValueOnce(undefined);
-    const { requireSession } = await import("../src/dal.ts");
+    const { requireSession } = await import("../src/server/dal.ts");
     expect(await requireSession()).toEqual(snapshot);
     expect(redirectMock).not.toHaveBeenCalled();
   });

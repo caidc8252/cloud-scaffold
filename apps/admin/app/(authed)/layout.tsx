@@ -1,10 +1,15 @@
 import { requireSession } from "@cloud/auth";
+import { PermissionsProvider } from "@cloud/auth/client";
 
 export default async function AuthedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireSession();
-  return <>{children}</>;
+  const session = await requireSession();
+  return (
+    <PermissionsProvider permissions={session.permissions}>
+      {children}
+    </PermissionsProvider>
+  );
 }
