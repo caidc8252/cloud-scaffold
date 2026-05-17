@@ -5,10 +5,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./globals.css": "./src/globals.css"
+    "./globals.css": "./src/globals.css",
+    "./messages/*.json": "./messages/*.json"
   },
   "dependencies": {
+    "@cloud/i18n": "workspace:*",
     "lucide-react": "catalog:",
+    "next-intl": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   }

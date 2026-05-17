@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadEnvFile } from "node:process";
@@ -30,6 +31,7 @@ const nextConfig: NextConfig = {
     "@cloud/cache",
     "@cloud/config",
     "@cloud/db",
+    "@cloud/i18n",
     "@cloud/security",
     "@cloud/ui",
   ],
@@ -41,4 +43,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
+export default withNextIntl(nextConfig);

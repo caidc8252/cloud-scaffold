@@ -1,14 +1,27 @@
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
+import { TimeZoneInit } from "@cloud/i18n/client";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Cloud Admin",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const locale = await getLocale();
   return (
-    <html lang="zh-CN">
-      <body>{children}</body>
+    <html lang={locale}>
+      <body>
+        <NextIntlClientProvider>
+          <TimeZoneInit />
+          {children}
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }

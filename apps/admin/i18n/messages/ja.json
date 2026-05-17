@@ -1,0 +1,31 @@
+{
+  "common": {
+    "logout": "ログアウト",
+    "back": "戻る",
+    "backHome": "ホームに戻る"
+  },
+  "auth": {
+    "login": {
+      "title": "Cloud Admin ログイン",
+      "submit": "ログイン",
+      "submitting": "ログイン中…",
+      "account": "アカウント",
+      "password": "パスワード",
+      "errors": {
+        "missing": "アカウントとパスワードを入力してください。",
+        "invalidRequest": "ログインリクエストが無効です。ページを再読み込みしてください。",
+        "invalidCredentials": "アカウントまたはパスワードが間違っています。",
+        "encryptFailed": "暗号化に失敗しました。再試行してください。"
+      }
+    },
+    "forbidden": {
+      "title": "403 アクセス権限がありません",
+      "body": "このアカウントにはこのリソースへのアクセス権がありません。管理者にお問い合わせください。"
+    }
+  },
+  "home": {
+    "welcome": "ようこそ、{account}",
+    "permissionsLabel": "権限：{permissions}",
+    "permissionsEmpty": "（なし）"
+  }
+}

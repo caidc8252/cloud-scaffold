@@ -1,26 +1,37 @@
+import { getTranslations } from "next-intl/server";
+import { LocaleSwitcher } from "@cloud/i18n/client";
 import { requireSession } from "@cloud/auth";
 import { DemoButtons } from "./demo-buttons";
 
 export default async function AdminHomePage() {
   const session = await requireSession();
+  const t = await getTranslations("home");
+  const tc = await getTranslations("common");
+  const empty = t("permissionsEmpty");
+  const perms = session.permissions.join(", ") || empty;
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 bg-zinc-50 px-6 py-10">
       <header className="flex w-full max-w-3xl items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Welcome, {session.account}</h1>
+          <h1 className="text-2xl font-semibold">
+            {t("welcome", { account: session.account })}
+          </h1>
           <p className="text-xs text-zinc-500">
-            permissions: {session.permissions.join(", ") || "(none)"}
+            {t("permissionsLabel", { permissions: perms })}
           </p>
         </div>
-        <form action="/api/auth/logout" method="POST">
-          <button
-            type="submit"
-            className="rounded-md border px-4 py-2 text-sm hover:bg-zinc-100"
-          >
-            退出登录
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          <LocaleSwitcher />
+          <form action="/api/auth/logout" method="POST">
+            <button
+              type="submit"
+              className="rounded-md border px-4 py-2 text-sm hover:bg-zinc-100"
+            >
+              {tc("logout")}
+            </button>
+          </form>
+        </div>
       </header>
 
       <DemoButtons />

@@ -8,6 +8,7 @@ catalog:
   "bcryptjs": "^3.0.3"
   "ioredis": "^5.8.2"
   "lucide-react": "^0.552.0"
+  "next-intl": "^4.12.0"
   "prisma": "^7.6.0"
   "react": "19.2.4"
   "react-dom": "19.2.4"

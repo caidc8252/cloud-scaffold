@@ -7,6 +7,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { useTranslations } from "next-intl";
 import { rsaEncrypt } from "@cloud/security/client";
 import { Button, Input, Label } from "@cloud/ui";
 import { loginAction, type LoginState } from "./actions";
@@ -27,6 +28,7 @@ async function getPublicKey(): Promise<string> {
 }
 
 export function LoginForm() {
+  const t = useTranslations("auth.login");
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const [encryptError, setEncryptError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -39,7 +41,7 @@ export function LoginForm() {
     const account = String(fd.get("account") ?? "").trim();
     const password = String(fd.get("password") ?? "");
     if (!account || !password) {
-      setEncryptError("请输入账号和密码");
+      setEncryptError(t("errors.missing"));
       return;
     }
     try {
@@ -53,7 +55,7 @@ export function LoginForm() {
         formAction(submission);
       });
     } catch (err) {
-      setEncryptError(err instanceof Error ? err.message : "加密失败，请重试");
+      setEncryptError(err instanceof Error ? err.message : t("errors.encryptFailed"));
     }
   }
 
@@ -66,11 +68,11 @@ export function LoginForm() {
       className="flex w-80 flex-col gap-4"
     >
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="account">账号</Label>
+        <Label htmlFor="account">{t("account")}</Label>
         <Input id="account" name="account" autoComplete="username" required />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">密码</Label>
+        <Label htmlFor="password">{t("password")}</Label>
         <Input
           id="password"
           name="password"
@@ -85,7 +87,7 @@ export function LoginForm() {
         </p>
       ) : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "登录中..." : "登录"}
+        {pending ? t("submitting") : t("submit")}
       </Button>
     </form>
   );

@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createSessionFor } from "@cloud/auth";
 import { getEnv } from "@cloud/config";
 import { prisma } from "@cloud/db";
@@ -27,12 +28,17 @@ function parsePayload(plaintext: string): { password: string; ts: number } {
   return { password: parsed.password, ts: parsed.ts };
 }
 
-export async function loginAction(_prev: LoginState, formData: FormData): Promise<LoginState> {
+export async function loginAction(
+  _prev: LoginState,
+  formData: FormData,
+): Promise<LoginState> {
+  const t = await getTranslations("auth.login.errors");
+
   const account = String(formData.get("account") ?? "").trim();
   const encrypted = String(formData.get("encrypted") ?? "");
 
   if (!account || !encrypted) {
-    return { error: "请输入账号和密码" };
+    return { error: t("missing") };
   }
 
   let password: string;
@@ -42,7 +48,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     assertFreshTimestamp(payload.ts);
     password = payload.password;
   } catch {
-    return { error: "登录请求无效，请刷新页面重试" };
+    return { error: t("invalidRequest") };
   }
 
   const user = await prisma.user.findUnique({
@@ -57,7 +63,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
   });
 
   if (!user || !(await verifyPassword(user.password, password))) {
-    return { error: "账号或密码错误" };
+    return { error: t("invalidCredentials") };
   }
 
   await createSessionFor({
