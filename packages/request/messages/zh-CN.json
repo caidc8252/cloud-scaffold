@@ -1,0 +1,8 @@
+{
+  "errors": {
+    "badRequest": "请求参数错误",
+    "unauthorized": "未授权访问",
+    "forbidden": "权限不足",
+    "notFound": "资源不存在"
+  }
+}

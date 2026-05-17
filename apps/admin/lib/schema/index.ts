@@ -4,7 +4,6 @@ export {
   aggregateErrors,
   parseOrFirstError,
   parseAllErrors,
-  badRequestResponse,
   type ParseResult,
   type ParseAllResult,
 } from "./validation.ts";

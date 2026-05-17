@@ -1,0 +1,8 @@
+{
+  "errors": {
+    "badRequest": "リクエストが無効です",
+    "unauthorized": "認証されていません",
+    "forbidden": "アクセス権限がありません",
+    "notFound": "リソースが見つかりません"
+  }
+}

@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
     "@cloud/config",
     "@cloud/db",
     "@cloud/i18n",
+    "@cloud/request",
     "@cloud/security",
     "@cloud/ui",
   ],

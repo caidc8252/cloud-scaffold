@@ -1,15 +1,19 @@
 import { AuthzError, assertPermissions } from "@cloud/auth";
+import {
+  forbiddenResponse,
+  successResponse,
+  unauthorizedResponse,
+} from "@cloud/request";
 
 export async function GET() {
   try {
     await assertPermissions({ all: ["user.export"] });
-    return Response.json({ ok: true });
+    return successResponse({ message: "ok" });
   } catch (e) {
     if (e instanceof AuthzError) {
-      return Response.json(
-        { code: e.code, missing: e.missing },
-        { status: e.status },
-      );
+      return e.status === 401
+        ? await unauthorizedResponse()
+        : await forbiddenResponse();
     }
     throw e;
   }

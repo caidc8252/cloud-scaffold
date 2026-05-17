@@ -55,10 +55,3 @@ export function parseAllErrors<S extends ZodType>(
   return { ok: false, ...aggregateErrors(result.error) };
 }
 
-/** Route Handler 失败响应（400 + 第一条 message）。 */
-export function badRequestResponse(message: string): Response {
-  return Response.json(
-    { code: "INVALID_INPUT", error: message },
-    { status: 400 },
-  );
-}

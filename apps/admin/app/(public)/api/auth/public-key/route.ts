@@ -1,7 +1,8 @@
 import { getEnv } from "@cloud/config";
+import { successResponse } from "@cloud/request";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return Response.json({ publicKey: getEnv().LOGIN_PUBLIC_KEY_PEM });
+  return successResponse({ publicKey: getEnv().LOGIN_PUBLIC_KEY_PEM });
 }

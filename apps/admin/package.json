@@ -16,6 +16,7 @@
     "@cloud/config": "workspace:*",
     "@cloud/db": "workspace:*",
     "@cloud/i18n": "workspace:*",
+    "@cloud/request": "workspace:*",
     "@cloud/security": "workspace:*",
     "@cloud/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.2",

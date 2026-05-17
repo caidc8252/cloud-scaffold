@@ -23,8 +23,8 @@ async function getPublicKey(): Promise<string> {
   if (!res.ok) {
     throw new Error("failed to fetch login public key");
   }
-  const json = (await res.json()) as { publicKey: string };
-  cachedPublicKey = json.publicKey;
+  const json = (await res.json()) as { data: { publicKey: string } };
+  cachedPublicKey = json.data.publicKey;
   return cachedPublicKey;
 }
 

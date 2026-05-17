@@ -138,6 +138,9 @@ importers:
       '@cloud/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@cloud/request':
+        specifier: workspace:*
+        version: link:../../packages/request
       '@cloud/security':
         specifier: workspace:*
         version: link:../../packages/security
@@ -340,6 +343,21 @@ importers:
       react:
         specifier: 'catalog:'
         version: 19.2.4
+      server-only:
+        specifier: 'catalog:'
+        version: 0.0.1
+
+  packages/request:
+    dependencies:
+      '@cloud/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      next:
+        specifier: ^16.0.0
+        version: 16.2.6(@babel/core@7.29.0)(@playwright/test@1.60.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next-intl:
+        specifier: 'catalog:'
+        version: 4.12.0(next@16.2.6(@babel/core@7.29.0)(@playwright/test@1.60.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       server-only:
         specifier: 'catalog:'
         version: 0.0.1

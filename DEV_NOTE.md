@@ -225,3 +225,33 @@ LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KE
 | Route Handler | `parseOrFirstError(schema, input)` + `badRequestResponse(msg)` | `{ ok:false, error }` → HTTP 400 | 单条原因便于国际化提示 |
 
 底层：`firstErrorMessage(err)` / `aggregateErrors(err)` 暴露给特殊需求自取。
+
+---
+
+## HTTP 响应约定（@cloud/request）
+
+### 决策
+
+- **RESTful，不带业务 code**：成功体 `{ data, pager? }`，失败体 `{ message }`，语义由 HTTP status 表达。
+- **统一出口**：所有 Route Handler 走 `@cloud/request`，禁止在业务代码里手写 `Response.json(...)`。
+- **错误默认文案 i18n**：4xx 命名 helper 无参调用时自动从 `errors.*` namespace 取词；调用方可传 `message` 显式覆盖。框架自带 `en/zh-CN/ja` 词典（`@cloud/request/messages/*.json`），随 `loadMessages` 自动 deep-merge 进 app。
+
+### Helper 矩阵
+
+| 用途 | helper | 状态码 | 是否需要 await |
+|---|---|---|---|
+| 单资源 / 列表 + 分页 | `successResponse(data, pager?)` | 200 | 否 |
+| 新建 | `createdResponse(data)` | 201 | 否 |
+| 无返回体 | `noContentResponse()` | 204 | 否 |
+| 通用错误（自定义状态） | `errorResponse(message, status = 400)` | 默认 400，可覆盖 | 否 |
+| 入参非法 | `badRequestResponse(message?)` | 400 | 是 |
+| 未登录 | `unauthorizedResponse(message?)` | 401 | 是 |
+| 无权限 | `forbiddenResponse(message?)` | 403 | 是 |
+| 资源不存在 | `notFoundResponse(message?)` | 404 | 是 |
+
+### 与 zod 的衔接
+
+```ts
+const parsed = parseOrFirstError(querySchema, Object.fromEntries(searchParams));
+if (!parsed.ok) return errorResponse(parsed.error); // 已翻译 message 直传，status 自动 400
+```
