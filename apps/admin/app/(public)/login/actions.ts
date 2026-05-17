@@ -10,49 +10,62 @@ import {
   rsaDecrypt,
   verifyPassword,
 } from "@cloud/security/server";
+import { parseAllErrors } from "../../../lib/schema";
+import {
+  loginActionInputSchema,
+  loginPayloadSchema,
+  type LoginErrorKey,
+} from "./schema/login";
 
-export type LoginState = { error?: string };
-
-type LoginPayload = { password?: unknown; ts?: unknown };
-
-function parsePayload(plaintext: string): { password: string; ts: number } {
-  let parsed: LoginPayload;
-  try {
-    parsed = JSON.parse(plaintext) as LoginPayload;
-  } catch {
-    throw new Error("payload is not valid JSON");
-  }
-  if (typeof parsed.password !== "string" || typeof parsed.ts !== "number") {
-    throw new Error("payload missing password or ts");
-  }
-  return { password: parsed.password, ts: parsed.ts };
-}
+export type LoginState = {
+  fieldErrors?: Record<string, string[]>;
+  formErrors?: string[];
+};
 
 export async function loginAction(
   _prev: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
   const t = await getTranslations("auth.login.errors");
+  const translate = (keys: string[]) =>
+    keys.map((k) => t(k as LoginErrorKey));
 
-  const account = String(formData.get("account") ?? "").trim();
-  const encrypted = String(formData.get("encrypted") ?? "");
-
-  if (!account || !encrypted) {
-    return { error: t("missing") };
+  // 1. 入参形状校验：account + encrypted 必填。失败回所有 issue。
+  const input = parseAllErrors(loginActionInputSchema, {
+    account: formData.get("account"),
+    encrypted: formData.get("encrypted"),
+  });
+  if (!input.ok) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [field, keys] of Object.entries(input.fieldErrors)) {
+      fieldErrors[field] = translate(keys);
+    }
+    return {
+      fieldErrors,
+      formErrors: translate(input.formErrors),
+    };
   }
 
-  let password: string;
+  // 2. RSA 解密 + 解密后形状校验 + ts 新鲜度
+  let payload: { password: string; ts: number };
   try {
-    const plaintext = rsaDecrypt(encrypted, getEnv().LOGIN_PRIVATE_KEY_PEM);
-    const payload = parsePayload(plaintext);
-    assertFreshTimestamp(payload.ts);
-    password = payload.password;
+    const plaintext = rsaDecrypt(
+      input.data.encrypted,
+      getEnv().LOGIN_PRIVATE_KEY_PEM,
+    );
+    const parsed = parseAllErrors(loginPayloadSchema, JSON.parse(plaintext));
+    if (!parsed.ok) {
+      return { formErrors: [t("invalidRequest")] };
+    }
+    assertFreshTimestamp(parsed.data.ts);
+    payload = parsed.data;
   } catch {
-    return { error: t("invalidRequest") };
+    return { formErrors: [t("invalidRequest")] };
   }
 
+  // 3. 鉴权
   const user = await prisma.user.findUnique({
-    where: { account },
+    where: { account: input.data.account },
     select: {
       id: true,
       account: true,
@@ -62,8 +75,8 @@ export async function loginAction(
     },
   });
 
-  if (!user || !(await verifyPassword(user.password, password))) {
-    return { error: t("invalidCredentials") };
+  if (!user || !(await verifyPassword(user.password, payload.password))) {
+    return { formErrors: [t("invalidCredentials")] };
   }
 
   await createSessionFor({

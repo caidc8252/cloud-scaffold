@@ -196,3 +196,32 @@ LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KE
 | 改 password seed 后 session 不失效 | 预期：session 是独立生命周期，30min 内不踢。要立即生效手动 redis-cli `DEL session:<sid>` 或重登 |
 | middleware 想读 session | 不要在 proxy.ts 里读 Redis；改 layout 或 page 里的 `requireSession()` |
 | Server Action 内 `getSession()` 又查了一次 Redis | 正常：Server Action 与触发它的页面是不同请求，cache() 不跨请求 |
+
+---
+
+## Zod 校验约定
+
+### 决策
+
+- **版本统一**：`zod` 锁在根 `pnpm-workspace.yaml` catalog，所有 app/package 用 `"zod": "catalog:"` 继承。
+- **只校验外部 / 不可信数据**：FormData、API 请求体 / query、URL 参数。内部计算字段、缓存字段、UI 临时状态不走 schema。
+- **类型由 schema 反推**：`type X = z.infer<typeof xSchema>`，不手写第二份。
+- **执行顺序**：zod 解析 → 鉴权 → 业务逻辑。鉴权之前先把入参形状/范围卡死，不让脏数据走进权限和 DB。
+- **Schema message = i18n key**：schema 内 `min(1, "missing")` 写的是 `auth.login.errors.missing` 的最后一段；调用方用 `t(\`errors.${key}\`)` 翻译。schema 文件保持纯结构、零 i18n 依赖。
+
+### 分层
+
+| 层 | 位置 | barrel | 内容 |
+|---|---|---|---|
+| 共享 | `apps/<app>/lib/schema/` | **有** `index.ts` 统一出口 | 跨模块复用：分页、通用 string helper、校验工具 |
+| 业务 | `apps/<app>/app/<path>/schema/<name>.ts` | **不写** barrel，调用方直接 `from "./schema/<name>"` | 业务专属表单、入参、payload |
+
+### Helper 矩阵
+
+| 场景 | helper | 失败返回 | 出处 |
+|---|---|---|---|
+| 客户端表单 | `parseAllErrors(schema, input)` | `{ ok:false, fieldErrors, formErrors }` | 字段下方逐项回显 |
+| Server Action | `parseAllErrors(schema, input)` | 同上 | useActionState 接收 |
+| Route Handler | `parseOrFirstError(schema, input)` + `badRequestResponse(msg)` | `{ ok:false, error }` → HTTP 400 | 单条原因便于国际化提示 |
+
+底层：`firstErrorMessage(err)` / `aggregateErrors(err)` 暴露给特殊需求自取。

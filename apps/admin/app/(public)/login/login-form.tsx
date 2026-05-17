@@ -3,14 +3,15 @@
 import {
   startTransition,
   useActionState,
-  useRef,
   useState,
   type FormEvent,
 } from "react";
 import { useTranslations } from "next-intl";
 import { rsaEncrypt } from "@cloud/security/client";
 import { Button, Input, Label } from "@cloud/ui";
+import { parseAllErrors } from "../../../lib/schema";
 import { loginAction, type LoginState } from "./actions";
+import { loginFormSchema, type LoginErrorKey } from "./schema/login";
 
 const initialState: LoginState = {};
 
@@ -27,49 +28,81 @@ async function getPublicKey(): Promise<string> {
   return cachedPublicKey;
 }
 
+type ClientErrors = { fieldErrors: Record<string, string[]>; formErrors: string[] };
+const emptyErrors: ClientErrors = { fieldErrors: {}, formErrors: [] };
+
 export function LoginForm() {
   const t = useTranslations("auth.login");
   const [state, formAction, pending] = useActionState(loginAction, initialState);
-  const [encryptError, setEncryptError] = useState<string | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [clientErrors, setClientErrors] = useState<ClientErrors>(emptyErrors);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setEncryptError(null);
-    const form = event.currentTarget;
-    const fd = new FormData(form);
-    const account = String(fd.get("account") ?? "").trim();
-    const password = String(fd.get("password") ?? "");
-    if (!account || !password) {
-      setEncryptError(t("errors.missing"));
+    setClientErrors(emptyErrors);
+
+    const fd = new FormData(event.currentTarget);
+    const parsed = parseAllErrors(loginFormSchema, {
+      account: fd.get("account"),
+      password: fd.get("password"),
+    });
+    if (!parsed.ok) {
+      const translatedFieldErrors: Record<string, string[]> = {};
+      for (const [field, keys] of Object.entries(parsed.fieldErrors)) {
+        translatedFieldErrors[field] = keys.map((k) =>
+          t(`errors.${k as LoginErrorKey}`),
+        );
+      }
+      setClientErrors({
+        fieldErrors: translatedFieldErrors,
+        formErrors: parsed.formErrors.map((k) =>
+          t(`errors.${k as LoginErrorKey}`),
+        ),
+      });
       return;
     }
+
     try {
       const publicKey = await getPublicKey();
-      const payload = JSON.stringify({ password, ts: Date.now() });
+      const payload = JSON.stringify({
+        password: parsed.data.password,
+        ts: Date.now(),
+      });
       const encrypted = await rsaEncrypt(payload, publicKey);
       const submission = new FormData();
-      submission.set("account", account);
+      submission.set("account", parsed.data.account);
       submission.set("encrypted", encrypted);
       startTransition(() => {
         formAction(submission);
       });
     } catch (err) {
-      setEncryptError(err instanceof Error ? err.message : t("errors.encryptFailed"));
+      setClientErrors({
+        fieldErrors: {},
+        formErrors: [
+          err instanceof Error ? err.message : t("errors.encryptFailed"),
+        ],
+      });
     }
   }
 
-  const message = encryptError ?? state.error;
+  // 服务端错误覆盖 client 错误（最后一次操作的错误才相关）
+  const fieldErrors = state.fieldErrors ?? clientErrors.fieldErrors;
+  const formErrors = state.formErrors ?? clientErrors.formErrors;
 
   return (
     <form
-      ref={formRef}
       onSubmit={handleSubmit}
+      noValidate
       className="flex w-80 flex-col gap-4"
     >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="account">{t("account")}</Label>
-        <Input id="account" name="account" autoComplete="username" required />
+        <Input
+          id="account"
+          name="account"
+          autoComplete="username"
+          aria-invalid={(fieldErrors.account?.length ?? 0) > 0}
+        />
+        <FieldErrors messages={fieldErrors.account} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="password">{t("password")}</Label>
@@ -78,17 +111,31 @@ export function LoginForm() {
           name="password"
           type="password"
           autoComplete="current-password"
-          required
+          aria-invalid={(fieldErrors.password?.length ?? 0) > 0}
         />
+        <FieldErrors messages={fieldErrors.password} />
       </div>
-      {message ? (
-        <p className="text-sm text-red-600" aria-live="polite">
-          {message}
-        </p>
+      {formErrors.length > 0 ? (
+        <ul aria-live="polite" className="space-y-0.5 text-sm text-red-600">
+          {formErrors.map((m, i) => (
+            <li key={i}>{m}</li>
+          ))}
+        </ul>
       ) : null}
       <Button type="submit" disabled={pending}>
         {pending ? t("submitting") : t("submit")}
       </Button>
     </form>
+  );
+}
+
+function FieldErrors({ messages }: { messages?: string[] }) {
+  if (!messages || messages.length === 0) return null;
+  return (
+    <ul aria-live="polite" className="space-y-0.5 text-xs text-red-600">
+      {messages.map((m, i) => (
+        <li key={i}>{m}</li>
+      ))}
+    </ul>
   );
 }
