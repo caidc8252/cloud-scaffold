@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useTheme } from '@cloud/ui/lib/theme'
+import { useTheme } from '@cloud/ui/theme'
 
 export function ThemeSync() {
   const { resolved } = useTheme()

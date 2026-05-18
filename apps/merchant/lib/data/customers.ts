@@ -1,3 +1,5 @@
+import type { Role } from './roles'
+
 export type ContractStatus = 'Active' | 'Pending' | 'Terminated' | 'Signed'
 export type ContractKind = 'ISV' | 'ISO' | 'Acquirer' | 'PayFac'
 export type CustomerStatus = 'Active' | 'Onboarding' | 'Suspended'
@@ -37,6 +39,8 @@ export interface Customer {
   contracts: Contract[]
   operators: Operator[]
   events: CustomerEvent[]
+  deniedRoles?: string[]
+  customRoles?: Role[]
 }
 
 export const SEED_CUSTOMERS: Customer[] = [

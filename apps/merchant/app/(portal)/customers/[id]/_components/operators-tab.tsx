@@ -2,193 +2,279 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, MoreHorizontal, UserX, Shield, RefreshCw } from 'lucide-react'
 import {
-  Button, Badge, Modal, Input, Field,
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  Plus, MoreHorizontal, UserX, KeyRound, Mail, Lock, Unlock, Eye, EyeOff,
+} from 'lucide-react'
+import {
+  Button, Badge, Modal,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from '@cloud/ui'
 import { type Customer, type Operator } from '@/lib/data/customers'
-import { maskEmail } from '@/lib/format'
-import { SEED_ROLES } from '@/lib/data/roles'
+import { maskEmail, relTime } from '@/lib/format'
+import { CompanyLogo } from '@/components/layout/company-logo'
+import { usePIIMask } from '@/components/layout/pii-mask-context'
+import { InviteOperatorModal } from './invite-operator-modal'
+import { RolesSection } from './roles-section'
 
 interface OperatorsTabProps {
   customer: Customer
   onSave: (c: Customer) => void
 }
 
+type ConfirmAction = 'remove' | 'lock' | 'unlock'
+
 export function OperatorsTab({ customer, onSave }: OperatorsTabProps) {
+  const { maskOn, isRevealed, toggleReveal } = usePIIMask()
   const [inviteOpen, setInviteOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
-  const [editTarget, setEditTarget] = useState<number | null>(null)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('Operator')
-  const [editRole, setEditRole] = useState('')
+  const [confirm, setConfirm] = useState<{ op: Operator; index: number; action: ConfirmAction } | null>(null)
 
-  const roles = SEED_ROLES.map((r) => r.name)
+  const scope = (i: number, field: string) => `${customer.id}:op:${i}:${field}`
 
-  const handleInvite = () => {
-    if (!inviteEmail.trim()) return
-    const op: Operator = {
-      name: '', email: inviteEmail.trim(),
-      phone: '', role: inviteRole,
-      lastLogin: null, pending: true,
-    }
-    onSave({ ...customer, operators: [...customer.operators, op] })
-    setInviteOpen(false)
-    setInviteEmail('')
-    toast.success('Invitation sent', { description: inviteEmail })
-  }
-
-  const handleDelete = () => {
-    if (deleteTarget === null) return
-    onSave({ ...customer, operators: customer.operators.filter((_, i) => i !== deleteTarget) })
-    setDeleteTarget(null)
-    toast.success('Operator removed')
-  }
-
-  const handleEditRole = () => {
-    if (editTarget === null) return
+  const pushEvent = (kind: string, text: string) =>
     onSave({
       ...customer,
-      operators: customer.operators.map((o, i) => i === editTarget ? { ...o, role: editRole } : o),
+      events: [
+        ...customer.events,
+        { at: new Date().toISOString(), kind, by: 'admin@carbon', text },
+      ],
     })
-    setEditTarget(null)
-    toast.success('Role updated')
+
+  const handleReveal = (i: number, op: Operator) => {
+    const next = toggleReveal(scope(i, 'email'))
+    if (next) {
+      toast.info('Sensitive field revealed', { description: 'This action is recorded in the audit log.' })
+      pushEvent('reveal', `Revealed email for operator ${maskEmail(op.email)}`)
+    }
   }
 
-  const handleMfaReset = (i: number) => {
-    toast.success('MFA reset sent', { description: customer.operators[i].email })
+  const handleInvite = (op: Operator) => {
+    const text = op.email
+      ? `Operator invited · ${op.email}`
+      : 'Operator invite link generated'
+    onSave({
+      ...customer,
+      operators: [...customer.operators, op],
+      events: [...customer.events, { at: new Date().toISOString(), kind: 'operator+', by: 'admin@carbon', text }],
+    })
+  }
+
+  const runQuickAction = (op: Operator, action: 'reset' | 'resend') => {
+    if (action === 'reset') {
+      toast.success('Password reset email sent', { description: op.email })
+    } else {
+      toast.success('Activation link resent', { description: op.email })
+    }
+  }
+
+  const handleConfirm = () => {
+    if (!confirm) return
+    const { op, index, action } = confirm
+    if (action === 'remove') {
+      onSave({
+        ...customer,
+        operators: customer.operators.filter((_, i) => i !== index),
+        events: [
+          ...customer.events,
+          { at: new Date().toISOString(), kind: 'warn', by: 'admin@carbon', text: `Operator removed · ${op.email}` },
+        ],
+      })
+      toast.warning('Operator removed', { description: op.email })
+    } else {
+      const lock = action === 'lock'
+      onSave({
+        ...customer,
+        operators: customer.operators.map((o, i) => (i === index ? { ...o, locked: lock } : o)),
+        events: [
+          ...customer.events,
+          {
+            at: new Date().toISOString(),
+            kind: 'warn',
+            by: 'admin@carbon',
+            text: lock ? `Operator locked · ${op.email}` : `Operator unlocked · ${op.email}`,
+          },
+        ],
+      })
+      toast.success(lock ? 'Account locked' : 'Account unlocked', { description: op.email })
+    }
+    setConfirm(null)
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-sm font-semibold text-content-primary">Operators</h3>
-          <p className="text-xs text-content-tertiary mt-0.5">{customer.operators.length} operator{customer.operators.length !== 1 ? 's' : ''}</p>
-        </div>
-        <Button variant="secondary" size="sm" onClick={() => setInviteOpen(true)}>
-          <Plus size={13} /> Invite operator
-        </Button>
-      </div>
-
+    <div className="flex flex-col gap-5">
       <div className="rounded-xl border border-line-default bg-surface-2 shadow-1 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-line-subtle">
+          <div>
+            <span className="text-sm font-semibold text-content-primary">Operators</span>
+            <span className="ml-1.5 text-xs text-content-tertiary tabular-nums">
+              ({customer.operators.length})
+            </span>
+          </div>
+          <Button variant="primary" size="sm" onClick={() => setInviteOpen(true)}>
+            <Plus size={13} /> Invite operator
+          </Button>
+        </div>
+
         {customer.operators.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-content-tertiary">No operators yet.</div>
         ) : (
-          <table className="w-full border-collapse text-sm">
-            <thead className="bg-surface-3">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default">Role</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default w-20">MFA</th>
-                <th className="px-4 py-3 border-b border-line-default w-10" />
-              </tr>
-            </thead>
-            <tbody>
-              {customer.operators.map((op, i) => (
-                <tr key={i} className="border-b border-line-subtle last:border-0">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-content-primary font-medium">
-                        {op.name || <span className="text-content-disabled italic">Pending</span>}
-                      </span>
-                      {op.pending && <Badge tone="warning">Invited</Badge>}
-                      {op.locked && <Badge tone="error">Locked</Badge>}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge tone={op.role === 'Admin' ? 'info' : 'neutral'}>{op.role}</Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-content-secondary font-mono text-xs">{maskEmail(op.email)}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge tone={op.pending ? 'neutral' : 'success'}>{op.pending ? '—' : 'Active'}</Badge>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="inline-flex items-center justify-center size-7 rounded-lg text-content-tertiary hover:bg-surface-hover hover:text-content-primary transition-colors cursor-pointer">
-                        <MoreHorizontal size={14} />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { setEditTarget(i); setEditRole(op.role) }}>
-                          <Shield size={13} /> Edit role
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleMfaReset(i)}>
-                          <RefreshCw size={13} /> Reset MFA
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-error focus:text-error" onClick={() => setDeleteTarget(i)}>
-                          <UserX size={13} /> Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
+            <table className="w-full border-collapse text-sm">
+              <thead className="bg-surface-3">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default">Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default">Email</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default">Role</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-content-tertiary uppercase tracking-wide border-b border-line-default">Last login</th>
+                  <th className="px-4 py-3 border-b border-line-default w-10" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody>
+                {customer.operators.map((op, i) => {
+                  const showEmail = !maskOn || isRevealed(scope(i, 'email'))
+                  return (
+                    <tr key={i} className="border-b border-line-subtle last:border-0">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <CompanyLogo name={op.name || op.email} size={28} />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {op.name ? (
+                                <span className="text-content-primary font-medium">{op.name}</span>
+                              ) : (
+                                <span className="text-content-disabled italic">Not yet provided</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {op.pending && <Badge tone="warning">Pending activation</Badge>}
+                              {op.locked && <Badge tone="error">Locked</Badge>}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs text-content-secondary">
+                            {showEmail ? op.email : maskEmail(op.email)}
+                          </span>
+                          {maskOn && (
+                            <RevealToggle
+                              revealed={isRevealed(scope(i, 'email'))}
+                              onClick={() => handleReveal(i, op)}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge tone={op.role === 'Admin' ? 'info' : 'neutral'}>{op.role}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {op.lastLogin ? relTime(op.lastLogin) : <span className="text-content-disabled">Never</span>}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="inline-flex items-center justify-center size-7 rounded-lg text-content-tertiary hover:bg-surface-hover hover:text-content-primary transition-colors cursor-pointer">
+                            <MoreHorizontal size={14} />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {op.pending ? (
+                              <DropdownMenuItem onClick={() => runQuickAction(op, 'resend')}>
+                                <Mail size={13} /> Resend activation
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => runQuickAction(op, 'reset')}>
+                                <KeyRound size={13} /> Reset password
+                              </DropdownMenuItem>
+                            )}
+                            {!op.pending && (
+                              op.locked ? (
+                                <DropdownMenuItem onClick={() => setConfirm({ op, index: i, action: 'unlock' })}>
+                                  <Unlock size={13} /> Unlock account
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => setConfirm({ op, index: i, action: 'lock' })}>
+                                  <Lock size={13} /> Lock account
+                                </DropdownMenuItem>
+                              )
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-error focus:text-error"
+                              onClick={() => setConfirm({ op, index: i, action: 'remove' })}
+                            >
+                              <UserX size={13} /> Remove operator
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
       </div>
 
-      {/* Invite modal */}
-      <Modal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite operator"
-        description="Send an invitation to a new operator for this customer."
+      <RolesSection customer={customer} onSave={onSave} />
+
+      <InviteOperatorModal open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={handleInvite} />
+
+      <Modal
+        open={!!confirm}
+        onClose={() => setConfirm(null)}
+        title={
+          confirm?.action === 'remove'
+            ? 'Remove operator'
+            : confirm?.action === 'lock'
+              ? 'Lock account'
+              : 'Unlock account'
+        }
         footer={
-          <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={() => setInviteOpen(false)}>Cancel</Button>
-            <Button variant="primary" disabled={!inviteEmail.trim()} onClick={handleInvite}>Send invitation</Button>
-          </div>
+          <>
+            <Button variant="ghost" onClick={() => setConfirm(null)}>Cancel</Button>
+            <Button
+              variant={confirm?.action === 'remove' ? 'destructive' : 'primary'}
+              onClick={handleConfirm}
+            >
+              {confirm?.action === 'remove'
+                ? 'Remove operator'
+                : confirm?.action === 'lock'
+                  ? 'Lock account'
+                  : 'Unlock account'}
+            </Button>
+          </>
         }
       >
-        <div className="flex flex-col gap-3 py-2">
-          <Field label="Email address" required>
-            <Input type="email" placeholder="operator@company.com" value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)} />
-          </Field>
-          <Field label="Role">
-            <Select value={inviteRole} onValueChange={(v) => { if (v) setInviteRole(v) }}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {roles.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
+        {confirm && (
+          <p className="text-sm leading-relaxed text-content-primary">
+            {confirm.action === 'remove' && (
+              <>Remove <strong>{confirm.op.name || confirm.op.email}</strong> from this customer? They will lose access immediately. This action is audited.</>
+            )}
+            {confirm.action === 'lock' && (
+              <>Lock <strong>{confirm.op.name || confirm.op.email}</strong>? They won't be able to sign in until you unlock the account.</>
+            )}
+            {confirm.action === 'unlock' && (
+              <>Unlock <strong>{confirm.op.name || confirm.op.email}</strong>? They'll regain sign-in access immediately.</>
+            )}
+          </p>
+        )}
       </Modal>
-
-      {/* Edit role modal */}
-      <Modal open={editTarget !== null} onClose={() => setEditTarget(null)} title="Edit role"
-        footer={
-          <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={() => setEditTarget(null)}>Cancel</Button>
-            <Button variant="primary" onClick={handleEditRole}>Save</Button>
-          </div>
-        }
-      >
-        <div className="py-2">
-          <Select value={editRole} onValueChange={(v) => { if (v) setEditRole(v) }}>
-            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {roles.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </Modal>
-
-      {/* Delete confirm modal */}
-      <Modal open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} title="Remove operator"
-        description={`Remove ${deleteTarget !== null ? (customer.operators[deleteTarget]?.name || customer.operators[deleteTarget]?.email) : ''} from this customer?`}
-        footer={
-          <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete}>Remove</Button>
-          </div>
-        }
-      />
     </div>
+  )
+}
+
+function RevealToggle({ revealed, onClick }: { revealed: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={revealed}
+      className={`inline-flex w-16 shrink-0 items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium transition-colors cursor-pointer tabular-nums ${
+        revealed
+          ? 'bg-warning-bg text-warning-strong hover:bg-warning-bg/70'
+          : 'bg-primary/10 text-primary hover:bg-primary/15'
+      }`}
+    >
+      {revealed ? <EyeOff size={11} /> : <Eye size={11} />}
+      {revealed ? 'Hide' : 'Reveal'}
+    </button>
   )
 }

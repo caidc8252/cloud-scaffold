@@ -27,7 +27,7 @@ export function ContractBadge({ kind, status = 'Active' }: ContractBadgeProps) {
         }}
       />
       {kind}
-      {status !== 'Active' && status !== 'Signed' && (
+      {status !== 'Active' && status !== 'Signed' && status !== kind && (
         <span style={{ opacity: 0.7 }}>· {status}</span>
       )}
     </Badge>

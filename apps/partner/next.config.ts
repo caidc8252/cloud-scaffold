@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
+    optimizePackageImports: ["@cloud/ui"],
   },
 };
 

@@ -5,6 +5,7 @@ import { Layout, Toaster } from '@cloud/ui'
 import { Sidebar } from '@/components/layout/sidebar'
 import { PortalHeader } from '@/components/layout/portal-header'
 import { CommandPalette } from '@/components/layout/command-palette'
+import { PIIMaskProvider } from '@/components/layout/pii-mask-context'
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const [cmdkOpen, setCmdkOpen] = useState(false)
@@ -21,7 +22,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   }, [])
 
   return (
-    <>
+    <PIIMaskProvider>
       <Layout
         sidebar={<Sidebar />}
         header={<PortalHeader onSearchClick={() => setCmdkOpen(true)} />}
@@ -30,6 +31,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       </Layout>
       <CommandPalette open={cmdkOpen} onClose={() => setCmdkOpen(false)} />
       <Toaster />
-    </>
+    </PIIMaskProvider>
   )
 }
