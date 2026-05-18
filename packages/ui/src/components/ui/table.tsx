@@ -84,7 +84,7 @@ export function Table<R>({ columns, rows, rowKey, sort, onSortChange, onRowClick
                 key={rowKey(row, i)}
                 onClick={onRowClick ? () => onRowClick(row, i) : undefined}
                 className={cn(
-                  'border-b border-line-subtle hover:bg-surface-hover/40 transition-colors duration-fast',
+                  'border-b border-line-subtle hover:bg-surface-hover/40 dark:hover:bg-surface-3 transition-colors duration-fast',
                   onRowClick && 'cursor-pointer',
                 )}
               >
