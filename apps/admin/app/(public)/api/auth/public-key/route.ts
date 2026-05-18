@@ -1,5 +1,5 @@
 import { getEnv } from "@cloud/config";
-import { successResponse } from "@cloud/request";
+import { successResponse } from "@cloud/request/server";
 
 export const dynamic = "force-dynamic";
 

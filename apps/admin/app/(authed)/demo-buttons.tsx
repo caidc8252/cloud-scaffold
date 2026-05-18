@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Can } from "@cloud/auth/client";
+import { RequestError, request } from "@cloud/request/client";
 import { Button } from "@cloud/ui";
 import { allowedAction, forbiddenAction } from "./demo-actions";
 
@@ -43,14 +44,20 @@ export function DemoButtons() {
     url: string,
     setter: (v: ApiOutcome) => void,
   ): Promise<void> {
-    const res = await fetch(url);
-    let body: unknown = null;
     try {
-      body = await res.json();
-    } catch {
-      body = await res.text();
+      const sb = await request.get<unknown>(url);
+      setter({ status: 200, body: sb });
+    } catch (err) {
+      if (err instanceof RequestError) {
+        if (err.status === 401) return; // 浏览器跳 logout
+        setter({
+          status: err.status,
+          body: err.body ?? { code: err.code },
+        });
+        return;
+      }
+      throw err;
     }
-    setter({ status: res.status, body });
   }
 
   return (

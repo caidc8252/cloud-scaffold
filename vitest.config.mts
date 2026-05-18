@@ -6,9 +6,10 @@ export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   resolve: {
     alias: {
-      // `server-only` exists to throw at module load in client bundles; in vitest it would block
-      // every server-side test that imports a server-marked module. Stub to a no-op for tests.
+      // `server-only` / `client-only` throw at module load to enforce bundle isolation;
+      // in vitest they would block every test that imports a marked module. Stub to no-ops.
       "server-only": new URL("./vitest.shims/server-only.ts", import.meta.url).pathname,
+      "client-only": new URL("./vitest.shims/client-only.ts", import.meta.url).pathname,
     },
   },
   test: {

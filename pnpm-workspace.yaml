@@ -6,6 +6,7 @@ catalog:
   "@prisma/client": "^7.6.0"
   "argon2": "^0.41.1"
   "bcryptjs": "^3.0.3"
+  "client-only": "^0.0.1"
   "ioredis": "^5.8.2"
   "lucide-react": "^0.552.0"
   "next-intl": "^4.12.0"

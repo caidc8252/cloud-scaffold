@@ -230,13 +230,22 @@ LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KE
 
 ## HTTP 响应约定（@cloud/request）
 
+### 包结构
+
+- `@cloud/request/server`：Route Handler 用的响应外壳（首行 `import "server-only"`）。
+- `@cloud/request/client`：浏览器用的 fetch 壳（首行 `"use client"` + 次行 `import "client-only"`）。
+- `@cloud/request`（根）：仅共享纯类型 `Pager / SuccessBody / ErrorBody`，client / server 都可读。
+
+业务代码**禁止**裸 `fetch()` 或裸 `Response.json(...)`；统一走对应子路径。
+
 ### 决策
 
 - **RESTful，不带业务 code**：成功体 `{ data, pager? }`，失败体 `{ message }`，语义由 HTTP status 表达。
-- **统一出口**：所有 Route Handler 走 `@cloud/request`，禁止在业务代码里手写 `Response.json(...)`。
-- **错误默认文案 i18n**：4xx 命名 helper 无参调用时自动从 `errors.*` namespace 取词；调用方可传 `message` 显式覆盖。框架自带 `en/zh-CN/ja` 词典（`@cloud/request/messages/*.json`），随 `loadMessages` 自动 deep-merge 进 app。
+- **错误默认文案 i18n**：4xx 命名 helper 无参调用时自动从 `request.errors.*` namespace 取词；调用方可传 `message` 显式覆盖。框架自带 `en/zh-CN/ja` 词典（`@cloud/request/messages/*.json`），随 `loadMessages` 自动 deep-merge 进 app。
+- **client 401 全局兜底**：`request.*` 拿到 401 时 `window.location.replace("/api/auth/logout")` 并抛 `RequestError(status: 401)`；调用方约定 `catch` 时静默处理 `status === 401`，UI 不响应。
+- **其余错误调用方决定 UI**：4xx (≠401) / 5xx / 网络层 / 解析错误统一抛 `RequestError`，wrapper 不做 toast / Error Boundary。
 
-### Helper 矩阵
+### Server Helper 矩阵（`@cloud/request/server`）
 
 | 用途 | helper | 状态码 | 是否需要 await |
 |---|---|---|---|
@@ -249,9 +258,55 @@ LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KE
 | 无权限 | `forbiddenResponse(message?)` | 403 | 是 |
 | 资源不存在 | `notFoundResponse(message?)` | 404 | 是 |
 
+### Client API（`@cloud/request/client`）
+
+```ts
+import { RequestError, request } from "@cloud/request/client";
+
+// GET 保留 envelope（含可选 pager）
+const { data, pager } = await request.get<User[]>("/api/users", { query: { page: 1 } });
+
+// 非 GET 自动拆 data
+const user = await request.post<User>("/api/users", { name: "x" });
+
+// 显式 query / 信号 / headers
+await request.patch("/api/users/1", { name: "y" }, { signal: ac.signal });
+```
+
+`RequestError` 形态：
+
+| 字段 | 含义 |
+|---|---|
+| `status` | HTTP 状态码；`0` = `fetch` 同步/异步 throw（DNS / 断网 / CORS preflight）|
+| `code` | `"http" \| "network" \| "parse" \| "unknown"` —— 仅在 `body.message` 缺失时用于 fallback 翻译 |
+| `body` | 解析到 `{ message }` 时填充 |
+| `cause` | 网络层 throw 或响应体解析失败时透传原因 |
+
+调用方约定：
+
+```ts
+const tRoot = useTranslations();
+
+try {
+  const sb = await request.get<...>("/...");
+} catch (err) {
+  if (!(err instanceof RequestError)) throw err;
+  if (err.status === 401) return;          // 浏览器在跳 logout，UI 静默
+  const msg = err.body?.message ?? tRoot(`request.errors.${err.code}`);
+  toast.error(msg);
+}
+```
+
 ### 与 zod 的衔接
 
 ```ts
 const parsed = parseOrFirstError(querySchema, Object.fromEntries(searchParams));
 if (!parsed.ok) return errorResponse(parsed.error); // 已翻译 message 直传，status 自动 400
 ```
+
+### messages namespace
+
+`@cloud/request/messages/*.json` 顶层是 `request.errors.*`（不和 app 自有 `errors.*` 撞名）。包含两类 key：
+
+- **server 默认文案**：`badRequest / unauthorized / forbidden / notFound`
+- **client fallback 文案**：`http / network / parse / unknown`（调用方在 `body.message` 缺失时回退使用）

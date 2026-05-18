@@ -5,10 +5,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts",
     "./messages/*.json": "./messages/*.json"
   },
   "dependencies": {
     "@cloud/i18n": "workspace:*",
+    "client-only": "catalog:",
     "next-intl": "catalog:",
     "server-only": "catalog:"
   },

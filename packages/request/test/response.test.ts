@@ -4,7 +4,7 @@ import {
   errorResponse,
   noContentResponse,
   successResponse,
-} from "../src/response.ts";
+} from "../src/server.ts";
 
 describe("successResponse", () => {
   it("wraps data with 200", async () => {

@@ -1,8 +1,14 @@
 {
-  "errors": {
-    "badRequest": "Bad request",
-    "unauthorized": "Unauthorized",
-    "forbidden": "Forbidden",
-    "notFound": "Resource not found"
+  "request": {
+    "errors": {
+      "badRequest": "Bad request",
+      "unauthorized": "Unauthorized",
+      "forbidden": "Forbidden",
+      "notFound": "Resource not found",
+      "http": "Request failed",
+      "network": "Network error, please check your connection",
+      "parse": "Invalid server response",
+      "unknown": "Unknown error"
+    }
   }
 }

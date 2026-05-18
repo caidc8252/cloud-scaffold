@@ -3,7 +3,7 @@ import {
   forbiddenResponse,
   successResponse,
   unauthorizedResponse,
-} from "@cloud/request";
+} from "@cloud/request/server";
 
 export async function GET() {
   try {

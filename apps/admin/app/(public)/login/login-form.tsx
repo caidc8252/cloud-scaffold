@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import { useTranslations } from "next-intl";
+import { RequestError, request } from "@cloud/request/client";
 import { rsaEncrypt } from "@cloud/security/client";
 import { Button, Input, Label } from "@cloud/ui";
 import { parseAllErrors } from "../../../lib/schema";
@@ -19,12 +20,10 @@ let cachedPublicKey: string | null = null;
 
 async function getPublicKey(): Promise<string> {
   if (cachedPublicKey) return cachedPublicKey;
-  const res = await fetch("/api/auth/public-key");
-  if (!res.ok) {
-    throw new Error("failed to fetch login public key");
-  }
-  const json = (await res.json()) as { data: { publicKey: string } };
-  cachedPublicKey = json.data.publicKey;
+  const { data } = await request.get<{ publicKey: string }>(
+    "/api/auth/public-key",
+  );
+  cachedPublicKey = data.publicKey;
   return cachedPublicKey;
 }
 
@@ -33,6 +32,7 @@ const emptyErrors: ClientErrors = { fieldErrors: {}, formErrors: [] };
 
 export function LoginForm() {
   const t = useTranslations("auth.login");
+  const tRoot = useTranslations();
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const [clientErrors, setClientErrors] = useState<ClientErrors>(emptyErrors);
 
@@ -75,12 +75,16 @@ export function LoginForm() {
         formAction(submission);
       });
     } catch (err) {
-      setClientErrors({
-        fieldErrors: {},
-        formErrors: [
-          err instanceof Error ? err.message : t("errors.encryptFailed"),
-        ],
-      });
+      // 401 由 wrapper 自动 replace 到 /api/auth/logout，UI 静默；
+      // 登录页本身不会拿到 401（未登录访问 /login 是允许的），保留分支以防异常。
+      if (err instanceof RequestError && err.status === 401) return;
+      const msg =
+        err instanceof RequestError
+          ? (err.body?.message ?? tRoot(`request.errors.${err.code}`))
+          : err instanceof Error
+            ? err.message
+            : t("errors.encryptFailed");
+      setClientErrors({ fieldErrors: {}, formErrors: [msg] });
     }
   }
 
