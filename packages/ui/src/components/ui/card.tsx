@@ -2,20 +2,58 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-// Bordered content container. size: 'default'|'sm' reduces padding across CardHeader/CardContent/CardFooter.
-// Set size once on Card; sub-components respond automatically via CSS group-data selectors.
+type CardSize = "sm" | "md" | "lg"
+type CardElevation = 0 | 1 | 2
+
+interface CardProps extends React.ComponentProps<"div"> {
+  size?: CardSize
+  elevation?: CardElevation
+  interactive?: boolean
+}
+
+const radiusClass: Record<CardSize, string> = {
+  sm: "rounded-lg",
+  md: "rounded-xl",
+  lg: "rounded-2xl",
+}
+
+const imgRadiusClass: Record<CardSize, string> = {
+  sm: "*:[img:first-child]:rounded-t-lg *:[img:last-child]:rounded-b-lg",
+  md: "*:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+  lg: "*:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl",
+}
+
+const elevationClass: Record<CardElevation, string> = {
+  0: "shadow-none",
+  1: "shadow-2",
+  2: "shadow-3",
+}
+
+const slotPaddingClass =
+  "group-data-[size=sm]/card:p-3 group-data-[size=md]/card:p-5 group-data-[size=lg]/card:p-6"
+
+// Bordered content container.
+// size: 'sm'|'md'|'lg' — controls radius (8/12/16) and slot padding (12/20/24) uniformly.
+// elevation: 0 flat / 1 rest (default) / 2 lifted — resting cards should stay at 1; 2 is for hover/popover.
+// interactive: hover → border-line-strong + shadow-3 + cursor-pointer. Use only on truly clickable cards.
 function Card({
   className,
-  size = "default",
+  size = "md",
+  elevation = 1,
+  interactive = false,
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: CardProps) {
   return (
     <div
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col overflow-hidden rounded-xl bg-surface-2 border border-line-default shadow-2 text-sm text-content-primary",
-        "*:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card flex flex-col overflow-hidden bg-surface-2 border border-line-default text-sm text-content-primary",
+        radiusClass[size],
+        imgRadiusClass[size],
+        elevationClass[elevation],
+        interactive &&
+          "cursor-pointer transition-[box-shadow,border-color] hover:border-line-strong hover:shadow-3",
         className
       )}
       {...props}
@@ -28,9 +66,8 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "group/card-header @container/card-header grid auto-rows-min items-start gap-1",
-        "px-6 py-4 border-b border-line-subtle",
-        "group-data-[size=sm]/card:px-4 group-data-[size=sm]/card:py-3",
+        "@container/card-header grid auto-rows-min items-start gap-1 border-b border-line-subtle",
+        slotPaddingClass,
         "has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]",
         className
       )}
@@ -79,7 +116,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("p-6 group-data-[size=sm]/card:p-4", className)}
+      className={cn(slotPaddingClass, className)}
       {...props}
     />
   )
@@ -90,8 +127,8 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center px-6 py-4 border-t border-line-subtle",
-        "group-data-[size=sm]/card:px-4 group-data-[size=sm]/card:py-3",
+        "flex items-center border-t border-line-subtle",
+        slotPaddingClass,
         className
       )}
       {...props}
