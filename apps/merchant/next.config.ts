@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
     "*.githubpreview.dev",
   ],
   transpilePackages: ["@cloud/ui"],
+  allowedDevOrigins: [
+    "127.0.0.1",
+    "*.app.github.dev",
+    "*.githubpreview.dev",
+    "*.preview.app.github.dev",
+  ],
 };
 
 export default nextConfig;

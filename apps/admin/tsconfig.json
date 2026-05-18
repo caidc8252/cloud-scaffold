@@ -7,6 +7,9 @@
       }
     ],
     "paths": {
+      "@/lib/utils": ["../../packages/ui/src/lib/utils"],
+      "@/lib/theme": ["../../packages/ui/src/lib/theme"],
+      "@/components/ui/*": ["../../packages/ui/src/components/ui/*"],
       "@/*": ["./*"],
       "@cloud/config": ["../../packages/config/src/index.ts"],
       "@cloud/db": ["../../packages/db/src/index.ts"],
