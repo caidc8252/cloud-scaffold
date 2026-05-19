@@ -64,6 +64,10 @@ export {
 } from './dropdown-menu'
 export { Empty, type EmptyProps } from './empty'
 export { HoverCard, HoverCardTrigger, HoverCardContent } from './hover-card'
+export {
+  InputGroup, InputGroupAddon, InputGroupInput, InputGroupButton,
+  InputGroupText, InputGroupTextarea,
+} from './input-group'
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from './input-otp'
 export {
   Menubar, MenubarPortal, MenubarMenu, MenubarTrigger, MenubarContent,
