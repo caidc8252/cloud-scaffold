@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '../../lib/utils'
 
 // Full-page shell: fixed-height viewport with optional sidebar (w-64) and sticky header (h-14).
 // Pass sidebar and header as named slots. Content area is max-w-content centered with px-8 pt-7 pb-16.
@@ -75,3 +75,5 @@ export const Stack: React.FC<StackProps> = ({ direction = 'column', gap = 'var(-
     {...rest}
   />
 )
+
+

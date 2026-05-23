@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 // Constrains child content to a fixed width/height ratio (e.g. ratio={16/9} for video thumbnails).
 function AspectRatio({
@@ -21,3 +21,5 @@ function AspectRatio({
 }
 
 export { AspectRatio }
+
+

@@ -5,8 +5,8 @@ import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { cn } from "../../lib/utils"
+import { Button } from "./button"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 type CarouselApi = UseEmblaCarouselType[1]
@@ -96,12 +96,14 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return
-    onSelect(api)
+    const frame = window.requestAnimationFrame(() => onSelect(api))
     api.on("reInit", onSelect)
     api.on("select", onSelect)
 
     return () => {
-      api?.off("select", onSelect)
+      window.cancelAnimationFrame(frame)
+      api.off("reInit", onSelect)
+      api.off("select", onSelect)
     }
   }, [api, onSelect])
 
@@ -239,9 +241,21 @@ function CarouselDots({ className, ...props }: React.ComponentProps<"div">) {
 
   React.useEffect(() => {
     if (!api) return
-    setSlideCount(api.scrollSnapList().length)
-    setSelectedIndex(api.selectedScrollSnap())
-    api.on("select", () => setSelectedIndex(api.selectedScrollSnap()))
+
+    const syncCarouselState = () => {
+      setSlideCount(api.scrollSnapList().length)
+      setSelectedIndex(api.selectedScrollSnap())
+    }
+
+    const frame = window.requestAnimationFrame(syncCarouselState)
+    api.on("reInit", syncCarouselState)
+    api.on("select", syncCarouselState)
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      api.off("reInit", syncCarouselState)
+      api.off("select", syncCarouselState)
+    }
   }, [api])
 
   return (
@@ -277,3 +291,5 @@ export {
   CarouselDots,
   useCarousel,
 }
+
+

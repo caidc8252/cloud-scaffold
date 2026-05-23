@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 import { ChevronRightIcon, CheckIcon } from "lucide-react"
 
 // Triggered dropdown with grouped actions, checkboxes, radio items, sub-menus, and keyboard navigation.
@@ -265,3 +265,5 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 }
+
+

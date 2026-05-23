@@ -15,20 +15,30 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
-      "@cloud/auth": ["./packages/auth/src/index.ts"],
-      "@cloud/cache": ["./packages/cache/src/index.ts"],
+      "@/*": ["./packages/ui/src/*"],
       "@cloud/config": ["./packages/config/src/index.ts"],
       "@cloud/db": ["./packages/db/src/index.ts"],
-      "@cloud/i18n": ["./packages/i18n/src/index.ts"],
-      "@cloud/i18n/server": ["./packages/i18n/src/server.ts"],
-      "@cloud/i18n/client": ["./packages/i18n/src/client.tsx"],
       "@cloud/permissions": ["./packages/permissions/src/index.ts"],
       "@cloud/request": ["./packages/request/src/index.ts"],
-      "@cloud/security/client": ["./packages/security/src/client/index.ts"],
+      "@cloud/request/server": ["./packages/request/src/server.ts"],
+      "@cloud/request/client": ["./packages/request/src/client.ts"],
       "@cloud/security/server": ["./packages/security/src/server/index.ts"],
       "@cloud/ui": ["./packages/ui/src/index.ts"],
       "@cloud/ui/*": ["./packages/ui/src/*"]
     }
   },
+  "include": [
+    "apps/web/**/*.ts",
+    "apps/web/**/*.tsx",
+    "apps/web/next-env.d.ts",
+    "packages/config/src/**/*.ts",
+    "packages/config/test/**/*.ts",
+    "packages/db/**/*.ts",
+    "packages/permissions/src/**/*.ts",
+    "packages/request/src/**/*.ts",
+    "packages/security/**/*.ts",
+    "packages/ui/src/**/*.ts",
+    "packages/ui/src/**/*.tsx"
+  ],
   "exclude": ["node_modules"]
 }

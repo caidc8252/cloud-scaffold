@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '../../lib/utils'
 
 export interface PaginationProps {
   page: number
@@ -72,3 +72,5 @@ export const Pagination: React.FC<PaginationProps> = ({ page, pageCount, onChang
     </nav>
   )
 }
+
+

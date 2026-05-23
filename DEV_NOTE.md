@@ -1,312 +1,68 @@
 # 开发笔记 / DEV_NOTE
 
-> 长期需要关注的框架知识、环境约定、决策依据。这里记**为什么**，操作步骤放 README，临时计划放 WIP/TODO。
+> 只保留脚手架长期维护需要知道的决策。运行方式看 README，临时任务看 WIP。
 
----
+## 当前定位
 
-## Prisma / 数据访问层
+- 这个仓库本身是脚手架源码仓，不再承载旧业务应用。
+- 当前默认基线不是“极简空壳”，而是一套可直接登录的后台骨架。
+- 当前默认工作区：
+  - `apps/web`
+  - `packages/config`
+  - `packages/db`
+  - `packages/request`
+  - `packages/security`
+  - `packages/ui`
 
-### 决策
+## 基线约束
 
-- **版本**：Prisma ORM **v7**（`prisma` / `@prisma/client` 均在根 `pnpm-workspace.yaml` catalog 中锁到 `^7.6.0`）。
-- **生成器**：使用 `prisma-client`（不要回退到 `prisma-client-js`，后者官方已 deprecated）。
-- **生成位置**：`packages/db/generated/client`（与 `src/` 平级，避免污染源码目录）。这样落地的好处：
-  - 不依赖 pnpm 对 `node_modules/.prisma/client` 的 symlink，避免 worktree / 分支切换后客户端与 schema 不一致。
-  - 生成的是普通 TS 源码，Next.js / tsx 直接消费，无运行时桥接。
-- **生成产物不入 git**：`.gitignore` 已排除 `packages/db/generated/`。`pnpm install` 的 postinstall 钩子负责重新生成。
-- **唯一事实源**：`packages/db/prisma.config.ts`。schema / migrations / seed 路径都从这里读，不要散落到各 `package.json` script。
-  - **v7 起 `datasource.url` 必须从 `schema.prisma` 移走**，由 `prisma.config.ts` 的 `datasource: { url: env("DATABASE_URL") }` 提供给 CLI；运行时连接走 driver adapter。schema 里的 `datasource db { provider = "postgresql" }` 只保留 `provider`，加 `url` 会触发 P1012。
-- **驱动适配器**：v7 起 SQL provider 必须显式注入 driver adapter，内置 query engine 不再直连数据库。本仓使用 `@prisma/adapter-pg` + `pg`，**只在 `packages/db` 声明**，应用层照旧 `import { prisma } from "@cloud/db"`，不需要感知 adapter。
-- **唯一消费入口**：`import { prisma, ... } from "@cloud/db"`。
-  - 禁止任何 app / package 直接 `import { PrismaClient } from "@prisma/client"`。
-  - 禁止深入 `@cloud/db/generated/*` 子路径。
-  - 需要 enum / 输入输出类型时也走 `@cloud/db` 的 re-export。
-  - `packages/db/prisma/seed.ts` 也走共享单例（`import { prisma } from "../src/index.ts"`），避免第二处 adapter 构造。
+- 默认基线必须始终保留：
+  - 登录页
+  - 基础登录态
+  - 后台 layout
+  - 用户 / 角色 / 菜单三张基础表
+  - Prisma + PostgreSQL
+- 不要重新引入新的基础技术栈。优先沿用仓库历史里已经验证过的：
+  - Next.js App Router
+  - Prisma
+  - PostgreSQL
+  - argon2
 
-### 多人协作流程
+## 模板约束
 
-| 场景                | 操作                                                                                                                   |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| 拉新代码 / 切分支   | `pnpm install` —— postinstall 会自动 `prisma generate`                                                                 |
-| 改 schema           | 1) 编辑 `prisma/schema.prisma` 2) `pnpm db:migrate -- --name <slug>` 3) commit `prisma/migrations/*` + `schema.prisma` |
-| 生成产物冲突 / 错乱 | `rm -rf packages/db/src/generated && pnpm db:generate`；**不要手动 merge 生成代码**                                    |
-| CI / 生产部署       | `pnpm install` → `pnpm db:deploy`（apply migrations）→ `pnpm build`                                                    |
-| Migration 命名      | `<动作>_<对象>`，如 `add_user_email_index`、`drop_legacy_role_table`                                                   |
+- `apps/web` 和 `templates/base` 必须保持同一条产品方向。
+- `templates/base` 代表“生成出来的新项目默认长什么样”。
+- `templates/features/*` 只保留真正可选的增强模块。
+- 当前可选模块只有：
+  - `redis`
+  - `i18n`
+  - `storage`
 
-### 故障排查
+## 环境与脚本约束
 
-- **类型不存在 / 找不到 `PrismaClient`**：先 `pnpm db:generate`，确认 `packages/db/generated/client/` 下有 `client.ts`。
-- **`Cannot find module '../../node_modules/prisma/...'`**：脚本应该走 pnpm bin（`prisma ...`），不要再写绝对路径。
-- **postinstall 失败但只是想跑 generate 之外的命令**：可以临时 `PRISMA_SKIP_POSTINSTALL_GENERATE=1 pnpm install`（注意不是默认行为）。
+- 根 `.env` 负责数据库和认证密钥。
+- `apps/web/.env` 负责应用展示名等 app 级变量。
+- Prisma 统一通过根脚本 [scripts/prisma.mjs](/d:/codes/cloud-frontend2/scripts/prisma.mjs) 触发，避免 workspace 下 `.env` 路径不一致。
+- `packages/config` 会主动加载根 `.env`，否则 Next 应用构建时拿不到数据库配置。
 
----
+## Next.js 约束
 
-## Env 分层
+- 这个仓库使用 Next.js App Router。
+- 路由分组目前采用：
+  - `app/(public)`：登录等公开页
+  - `app/(portal)`：登录后的后台区域
+- `apps/web/next.config.ts` 显式设置了 `turbopack.root`，避免 workspace root 识别漂移。
 
-### 决策
+## 验证基线
 
-按"基础设施 / 共享后端 / 每个 app"三层拆分 env，再叠加一层 dev / prod 分轨，单点消费入口 `getEnv()`（`packages/config`）不变。
-
-| 文件                              | 内容                                                                                                                                                                                          | 谁加载                                                                                                                          |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 根 `.env`                         | Docker 基础设施（`POSTGRES_*`、`REDIS_PORT`）+ 共享后端连接（`DATABASE_URL`、`REDIS_URL`）                                                                                                    | `docker-compose.yml`、`packages/db/prisma.config.ts`、`apps/*/next.config.ts` 通过 `loadEnvFile(rootEnvPath)` 提前注入          |
-| 根 `.env.development`             | 上一行所有键的本地开发覆盖值（数据库口令、本地端口等）。**仅 dev 加载**。                                                                                                                     | `apps/*/next.config.ts` 在 `process.env.NODE_ENV !== "production"` 时 `loadEnvFile(rootDevEnvPath)`，**早于** 根 `.env`         |
-| `apps/<app>/.env`                 | 该 app 自己的部署参数（`NEXT_PUBLIC_APP_NAME`）                                                                                                                                               | Next.js 按约定从 app cwd 自动加载                                                                                               |
-| `apps/<app>/.env.development`     | dev-only 覆盖。                                                                                                                                                                               | Next.js 在 `next dev`（`NODE_ENV=development`）时自动加载，**优先级高于** 同目录 `.env`                                          |
-
-变量优先级（后者覆盖前者，dev 模式下）：
-根 `.env` → 根 `.env.development` → `apps/<app>/.env` → `apps/<app>/.env.development` → `apps/<app>/.env.local` → shell 环境。
-
-生产（`NODE_ENV=production`）只读 `.env`，`.env.development` 完全跳过；PaaS 控制台注入的同名变量再覆盖文件值。
-
-> 加载机制说明：`loadEnvFile` 是"已存在则不覆盖"语义，所以**先**调用的文件值会胜出。`next.config.ts` 里先 load `.env.development` 再 load `.env`，因此 dev 文件优先。Next.js 自身对 `apps/<app>/.env*` 的加载顺序也遵循相同的 first-wins 原则。
-
-### 为什么这么拆
-
-- 安全：DB 口令等共享后端凭据只在根 `.env`，不会复制进每个 app 目录，减少串味和误提交面。
-- 多 app 隔离：`NEXT_PUBLIC_APP_NAME` 会 build-time 烘焙进 client bundle，三个 app 必须各自声明。
-- onboarding 简化：只跑 partner 时，只需根 + `apps/partner/.env`，其余 per-app 文件可省略。
-
-### 关键变量必填策略
-
-`packages/config/src/index.ts` 中的 schema 故意去掉了 `DATABASE_URL`、`NEXT_PUBLIC_APP_NAME` 两个的默认值 —— 缺失时 `getEnv()` 在启动期就抛 ZodError，明确指出缺哪个文件、哪个键，比静默连错库 / 串名字调试代价低。其余（如 `REDIS_URL`）保留 dev 默认。
-
-测试环境通过 `vitest.setup.ts` 注入 `DATABASE_URL` / `NEXT_PUBLIC_APP_NAME` 的占位值，使依赖 `@cloud/config` 的包在 module load 期调用 `getEnv()` 不会失败。
-
-### 排障顺序
-
-1. 启动报 ZodError 指明 `DATABASE_URL` / `REDIS_URL` 等 → 检查**根** `.env`。
-2. 启动报 ZodError 指明 `NEXT_PUBLIC_APP_NAME` → 检查 `apps/<当前 app>/.env`。
-
----
-
-## Workspace 约定
-
-- 包间依赖统一使用 `workspace:*`。版本锁在根 `pnpm-workspace.yaml` 的 `catalog:` 中。
-- `@cloud/db` 的 `exports` 字段只暴露 `.`，不要新增子路径导出 —— 入口收敛便于审计。
-- `@cloud/security` 例外：刻意通过 subpath exports 拆 `/client` 与 `/server`，server 子路径首行 `import "server-only"`，防止私钥相关代码进入客户端 bundle。
-
----
-
-## Auth / RSA 登录密钥
-
-### 决策
-
-- **算法**：RSA-2048 / OAEP / SHA-256。客户端用 Web Crypto `SubtleCrypto`，服务端用 Node `crypto.privateDecrypt`。
-- **密钥来源**：根 `.env` 的 `LOGIN_PUBLIC_KEY_PEM` / `LOGIN_PRIVATE_KEY_PEM`，由 `@cloud/config` 校验后 `getEnv()` 暴露。
-- **静态使用，不做热重载、不做 kid 轮换**。轮换流程 = 改 env + 重启服务。
-- **公钥下发**：每个 app 自带 `GET /api/auth/public-key`（`dynamic = "force-dynamic"`），登录前 FE fetch 一次缓存。**不走 `NEXT_PUBLIC_*` 编译期烘焙**，避免改密钥要重新 build。
-- **私钥隔离**：`@cloud/security/server` 顶部 `import "server-only"` —— 任何 client component 直接或间接 import 都在 Next.js build 期报错。
-
-### 密钥生成
+每次调整基线、模板或生成器，至少跑：
 
 ```bash
-# 仅打印到 stdout（用于复制贴到 PaaS 控制台）
-pnpm keys:gen
-
-# 同时写入根 .env 与 .env.example（已存在则跳过，加 --force 覆盖）
-pnpm keys:gen --write
+pnpm db:generate
+pnpm test:scaffold
+pnpm exec tsc --noEmit
+pnpm lint
+pnpm --filter web build
 ```
 
-底层用 Node `crypto.generateKeyPairSync('rsa', { modulusLength: 2048, publicKeyEncoding: spki, privateKeyEncoding: pkcs8 })`。
-
-### PEM 在 env 文件里的写法
-
-```env
-# 推荐：多行 quoted（本地 .env）
-LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----
-MIIE...
------END PRIVATE KEY-----"
-
-# 兼容：单行 + \n 字面量（PaaS 控制台只能单行时）
-LOGIN_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----"
-```
-
-`@cloud/config` 的 zod schema 自带 `\n` 字面量 → 真实换行的 transform，两种来源都通过同一个 regex 校验。
-
-### argon2 参数硬编码
-
-`@cloud/security/server/argon2.ts` 把 OWASP 2023+ 推荐档（argon2id, m=19456 KiB, t=2, p=1）写死。调整这些常量**不影响**已存 hash 的 verify —— argon2 编码字符串自带参数（`$argon2id$v=19$m=...,t=...,p=...$...`），新旧 hash 共存无迁移成本。所以不放 env。
-
-### `server-only` 在非 Next.js 场景的解法
-
-`server-only` 包在 module load 期 unconditional throw，任何 vitest / Node CLI 脚本 import 链上一旦碰到就炸。
-
-- **vitest**：`vitest.config.mts` 的 `resolve.alias['server-only']` 指向 `vitest.shims/server-only.ts`（noop）。
-- **Node CLI**：用 `--conditions=react-server` 让 Node 走 `server-only` 的 `react-server` 条件解析（resolves to `empty.js`）。`pnpm smoke:auth` 走这条路径。
-- **Prisma seed 不走这条路**：`packages/db` 不依赖 `@cloud/security`，seed.ts 把 argon2id hash 预先算好以字面量形式 inline，依赖树保持干净。改默认密码时按 seed.ts 注释里的 one-liner 重算 hash 粘贴即可。
-
-### 排障
-
-| 现象 | 检查 |
-|---|---|
-| 启动 ZodError 指明 `LOGIN_*_PEM` 不匹配 | 多半是 PEM 头/尾标记写错，或私钥贴反到公钥变量 |
-| 登录页 `/api/auth/public-key` 500 | 根 `.env` 是否缺 `LOGIN_PUBLIC_KEY_PEM`；`pnpm install` 是否在改 env 后跑过 |
-| 登录解密失败但 ts 正确 | FE bundle 里的公钥与服务端 env 私钥不是同一对（轮换时容易半换） |
-| `Argon2 native binding` 不可用 | `pnpm-workspace.yaml` 的 `onlyBuiltDependencies` 必须包含 `argon2`，pnpm 10 默认禁所有 build script |
-
-### 端到端 smoke
-
-`pnpm smoke:auth` 跑 `scripts/smoke-auth.ts`：fetch 公钥 → encrypt → decrypt → ts 校验 → 用真实 argon2 hash 比对 admin 密码。改 env / 改密钥 / 改 argon2 参数后先跑这个再手测 UI。
-
----
-
-## Session 与 Redis
-
-### 决策
-
-- **数据形状**：登录成功后写 httpOnly cookie `sid`（base64url 32B 随机），Redis key `session:<sid>` 存 JSON snapshot `{ userId, account, email, permissions[], issuedAt }`。snapshot 不含 password、不含 token，cookie 只是不透明 sid。
-- **TTL 双层 + 解耦**：
-  - Redis TTL **1800s 滚动**（每次 `getSession` 命中 → `EXPIRE` 续命）。Redis 是 session 真值。
-  - Cookie maxAge **12h 固定**（不随活跃续命）。Cookie 只是运输层。
-  - 闲置 30 分钟 → Redis 失效 → 下次 `getSession()` 返 null → `requireSession()` 跳转到 `/api/auth/logout` → Route Handler 清 cookie → /login。
-  - 活跃用户：12h 内 Redis 滚动续命；12h 到 cookie 自然失效一次重登。
-- **单点入口**：`@cloud/auth` 暴露 `getSession() / requireSession()`。
-  - `getSession()` 用 React 19 `cache()` 包裹，**请求内**多次调用只命中 1 次 Redis、touch 1 次。
-  - 跨请求不复用（Server Action 与触发它的页面是不同请求，各自一次 Redis）。这是 Next.js DAL 文章推荐的形态，对调用方而言 page / Server Action / Route Handler 都是同一个 `getSession()`。
-- **proxy.ts 不做鉴权**：中间件不读 Redis、不区分受保护路径。鉴权贴近数据，发生在 layout / page / Server Action / Route Handler 自身代码。
-- **失效 cookie 必清**：DAL 不能在 RSC 渲染上下文里写 cookie（Next.js 限制），所以 `requireSession()` 检测到无效 session 时统一 redirect 到 `/api/auth/logout` Route Handler（可写 cookie），由它清 cookie 再回 `/login`。代价：一次额外 302；收益：cookie 一致性始终保证。
-- **同一个 Route Handler 兼容显式登出**：`/api/auth/logout` 接受 GET（DAL 触发的清理跳转）和 POST（"退出登录"按钮）。语义同质化。
-
-### 包边界
-
-- `@cloud/cache`：**纯 Redis 原语**。`getRedis()` 单例 + `kv.get<T>/set/del/expire` 薄封装。**不**含 session 任何概念（key 命名、TTL、snapshot 形状）。
-- `@cloud/auth`：**Session 业务**。`sessionStore`、`SID_COOKIE`、`SESSION_TTL_SECONDS`、`SID_COOKIE_MAX_AGE_SECONDS`、DAL、login/logout 工具。**不**依赖 `@cloud/db`（user 查询在 app 里完成，把字段塞给 `createSessionFor`）。
-
-### 路由组约定（admin）
-
-- `app/(public)/`：不需要 session（登录页、`/api/auth/public-key`、`/api/auth/logout`）。
-- `app/(authed)/`：需要 session，`layout.tsx` 调 `requireSession()` 兜底。受保护的 Server Action / Route Handler 仍**自己**调一遍（layout 不在 Server Action 调用链上）。
-
-### 改密码 / 禁用用户
-
-本期**不**主动作废其它 session：改密码或禁用后，已存在的旧 session 在 TTL 到期前继续有效（≤ 30min 一致性窗口）。需要"即时踢"再加 `user:<userId>:sids` 索引；本期 YAGNI。
-
-### 测试
-
-- 单测覆盖 `kv`、`sessionStore`、DAL（mock cookies + sessionStore + redirect）、login/logout actions。
-- E2E 走 Playwright：`pnpm --filter admin e2e`。覆盖未登录跳转、错密码、登录成功、显式登出、失效 sid 清理。
-- 现存 `pnpm smoke:auth` 验证 RSA + argon2 通路，与 session 正交，保留。
-
-### 排障
-
-| 现象 | 检查 |
-|---|---|
-| 登录后访问 `/` 又被踢回 `/login` | Redis 起没起；`docker compose ps` 看 redis；env `REDIS_URL` 是否对 |
-| 改 password seed 后 session 不失效 | 预期：session 是独立生命周期，30min 内不踢。要立即生效手动 redis-cli `DEL session:<sid>` 或重登 |
-| middleware 想读 session | 不要在 proxy.ts 里读 Redis；改 layout 或 page 里的 `requireSession()` |
-| Server Action 内 `getSession()` 又查了一次 Redis | 正常：Server Action 与触发它的页面是不同请求，cache() 不跨请求 |
-
----
-
-## Zod 校验约定
-
-### 决策
-
-- **版本统一**：`zod` 锁在根 `pnpm-workspace.yaml` catalog，所有 app/package 用 `"zod": "catalog:"` 继承。
-- **只校验外部 / 不可信数据**：FormData、API 请求体 / query、URL 参数。内部计算字段、缓存字段、UI 临时状态不走 schema。
-- **类型由 schema 反推**：`type X = z.infer<typeof xSchema>`，不手写第二份。
-- **执行顺序**：zod 解析 → 鉴权 → 业务逻辑。鉴权之前先把入参形状/范围卡死，不让脏数据走进权限和 DB。
-- **Schema message = i18n key**：schema 内 `min(1, "missing")` 写的是 `auth.login.errors.missing` 的最后一段；调用方用 `t(\`errors.${key}\`)` 翻译。schema 文件保持纯结构、零 i18n 依赖。
-
-### 分层
-
-| 层 | 位置 | barrel | 内容 |
-|---|---|---|---|
-| 共享 | `apps/<app>/lib/schema/` | **有** `index.ts` 统一出口 | 跨模块复用：分页、通用 string helper、校验工具 |
-| 业务 | `apps/<app>/app/<path>/schema/<name>.ts` | **不写** barrel，调用方直接 `from "./schema/<name>"` | 业务专属表单、入参、payload |
-
-### Helper 矩阵
-
-| 场景 | helper | 失败返回 | 出处 |
-|---|---|---|---|
-| 客户端表单 | `parseAllErrors(schema, input)` | `{ ok:false, fieldErrors, formErrors }` | 字段下方逐项回显 |
-| Server Action | `parseAllErrors(schema, input)` | 同上 | useActionState 接收 |
-| Route Handler | `parseOrFirstError(schema, input)` + `badRequestResponse(msg)` | `{ ok:false, error }` → HTTP 400 | 单条原因便于国际化提示 |
-
-底层：`firstErrorMessage(err)` / `aggregateErrors(err)` 暴露给特殊需求自取。
-
----
-
-## HTTP 响应约定（@cloud/request）
-
-### 包结构
-
-- `@cloud/request/server`：Route Handler 用的响应外壳（首行 `import "server-only"`）。
-- `@cloud/request/client`：浏览器用的 fetch 壳（首行 `"use client"` + 次行 `import "client-only"`）。
-- `@cloud/request`（根）：仅共享纯类型 `Pager / SuccessBody / ErrorBody`，client / server 都可读。
-
-业务代码**禁止**裸 `fetch()` 或裸 `Response.json(...)`；统一走对应子路径。
-
-### 决策
-
-- **RESTful，不带业务 code**：成功体 `{ data, pager? }`，失败体 `{ message }`，语义由 HTTP status 表达。
-- **错误默认文案 i18n**：4xx 命名 helper 无参调用时自动从 `request.errors.*` namespace 取词；调用方可传 `message` 显式覆盖。框架自带 `en/zh-CN/ja` 词典（`@cloud/request/messages/*.json`），随 `loadMessages` 自动 deep-merge 进 app。
-- **client 401 全局兜底**：`request.*` 拿到 401 时 `window.location.replace("/api/auth/logout")` 并抛 `RequestError(status: 401)`；调用方约定 `catch` 时静默处理 `status === 401`，UI 不响应。
-- **其余错误调用方决定 UI**：4xx (≠401) / 5xx / 网络层 / 解析错误统一抛 `RequestError`，wrapper 不做 toast / Error Boundary。
-
-### Server Helper 矩阵（`@cloud/request/server`）
-
-| 用途 | helper | 状态码 | 是否需要 await |
-|---|---|---|---|
-| 单资源 / 列表 + 分页 | `successResponse(data, pager?)` | 200 | 否 |
-| 新建 | `createdResponse(data)` | 201 | 否 |
-| 无返回体 | `noContentResponse()` | 204 | 否 |
-| 通用错误（自定义状态） | `errorResponse(message, status = 400)` | 默认 400，可覆盖 | 否 |
-| 入参非法 | `badRequestResponse(message?)` | 400 | 是 |
-| 未登录 | `unauthorizedResponse(message?)` | 401 | 是 |
-| 无权限 | `forbiddenResponse(message?)` | 403 | 是 |
-| 资源不存在 | `notFoundResponse(message?)` | 404 | 是 |
-
-### Client API（`@cloud/request/client`）
-
-```ts
-import { RequestError, request } from "@cloud/request/client";
-
-// GET 保留 envelope（含可选 pager）
-const { data, pager } = await request.get<User[]>("/api/users", { query: { page: 1 } });
-
-// 非 GET 自动拆 data
-const user = await request.post<User>("/api/users", { name: "x" });
-
-// 显式 query / 信号 / headers
-await request.patch("/api/users/1", { name: "y" }, { signal: ac.signal });
-```
-
-`RequestError` 形态：
-
-| 字段 | 含义 |
-|---|---|
-| `status` | HTTP 状态码；`0` = `fetch` 同步/异步 throw（DNS / 断网 / CORS preflight）|
-| `code` | `"http" \| "network" \| "parse" \| "unknown"` —— 仅在 `body.message` 缺失时用于 fallback 翻译 |
-| `body` | 解析到 `{ message }` 时填充 |
-| `cause` | 网络层 throw 或响应体解析失败时透传原因 |
-
-调用方约定：
-
-```ts
-const tRoot = useTranslations();
-
-try {
-  const sb = await request.get<...>("/...");
-} catch (err) {
-  if (!(err instanceof RequestError)) throw err;
-  if (err.status === 401) return;          // 浏览器在跳 logout，UI 静默
-  const msg = err.body?.message ?? tRoot(`request.errors.${err.code}`);
-  toast.error(msg);
-}
-```
-
-### 与 zod 的衔接
-
-```ts
-const parsed = parseOrFirstError(querySchema, Object.fromEntries(searchParams));
-if (!parsed.ok) return errorResponse(parsed.error); // 已翻译 message 直传，status 自动 400
-```
-
-### messages namespace
-
-`@cloud/request/messages/*.json` 顶层是 `request.errors.*`（不和 app 自有 `errors.*` 撞名）。包含两类 key：
-
-- **server 默认文案**：`badRequest / unauthorized / forbidden / notFound`
-- **client fallback 文案**：`http / network / parse / unknown`（调用方在 `body.message` 缺失时回退使用）
+如果本地没有起 PostgreSQL，可以先不跑 `pnpm db:push` / `pnpm db:seed`，但 README 和模板里的启动链路必须保持完整。

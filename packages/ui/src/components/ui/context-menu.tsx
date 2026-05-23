@@ -1,7 +1,7 @@
 import * as React from "react"
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 import { ChevronRightIcon, CheckIcon } from "lucide-react"
 
 // Right-click contextual action menu. Wrap any element in ContextMenu to attach the menu to it.
@@ -268,3 +268,5 @@ export {
   ContextMenuSubTrigger,
   ContextMenuRadioGroup,
 }
+
+

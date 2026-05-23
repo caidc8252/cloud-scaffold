@@ -1,172 +1,346 @@
-# Cloud Frontend
+# Cloud Frontend Scaffold
 
-Next.js 16 monorepo for partner, merchant, and admin consoles.
+内部使用的 Next.js App Router Monorepo 脚手架仓库。当前仓库本身就是脚手架源码仓，同时也保留了一套可直接运行的后台基线。
 
-## Monorepo Structure
+## 默认保留的基线能力
 
-```txt
-apps/
-  partner/   # ISV/合作伙伴后台，完整认证和权限闭环
-  merchant/  # 商户后台骨架
-  admin/     # Admin 后台，已接入登录、退出和 admin 角色校验
+- `apps/web`：单个后台应用
+- `packages/ui`：基础 UI 组件与样式
+- `packages/request`：通用请求封装
+- `packages/config`：环境变量校验
+- `packages/db`：Prisma + PostgreSQL 数据层
+- `packages/security`：密码哈希等安全能力
+- 登录页、基础登录态
+- 用户 / 角色 / 菜单三张基础表
+- 左侧菜单 + 顶部导航 layout
+- 默认一条工作台菜单和一个管理员种子账号
 
-packages/
-  ui/           # shadcn 风格基础组件、公共后台布局、Tailwind v4 样式
-  request/      # fetch 封装、统一 API 响应、withApi、Zustand auth store
-  db/           # Prisma schema、Prisma client、seed
-  cache/        # Redis 客户端 + kv 原语（纯 Redis，无 session 语义）
-  auth/         # Session 鉴权（sessionStore + getSession/requireSession + login/logout 工具）
-  permissions/  # ABAC PermissionChecker
-  config/       # 环境变量校验和公共路径配置
-  security/     # RSA-OAEP 加解密、argon2id 密码 hash/verify、时间戳防重放
-```
-
-## Stack
-
-- Next.js `16.2.6` App Router
-- React `19`
-- pnpm workspace
-- Prisma + PostgreSQL
-- Redis session snapshot cache
-- ABAC 权限格式：`role.obj.method`
-- Zod + React Hook Form
-- Zustand client auth cache
-- Vitest, ESLint, Prettier
-
-## Auth / 密码哈希
-
-- 登录密码走 **RSA-OAEP-SHA256** 传输：FE 拿 `GET /api/auth/public-key` 公钥加密 `{password, ts}`，BE 用根 `.env` 私钥解密。
-- 数据库里存 **argon2id** hash。参数在 `packages/security/src/server/argon2.ts` **硬编码**（`memoryCost=19456, timeCost=2, parallelism=1`，OWASP 2023+ 推荐档），不走 env 配置：
-  - argon2 编码字符串自带参数（`$argon2id$v=19$m=...,t=...,p=...$...`），调整常量不影响旧 hash 的 verify —— 新旧 hash 共存无迁移成本
-  - dev / prod 不会因 env 漂移导致密码不可验证
-  - 想升级算力档（硬件升级后），改 `ARGON2_OPTIONS` 常量、重新 deploy 即可
-- RSA 密钥对生成：`pnpm keys:gen --write`（详见 DEV_NOTE.md「Auth / RSA 登录密钥」节）。
-- 端到端 smoke 验证：`pnpm smoke:auth`（启动 admin dev server 后运行）。
-
-## Session 鉴权（admin）
-
-- 登录成功后写 httpOnly `sid` cookie（maxAge 12h），session snapshot（userId / account / email / permissions）存 Redis key `session:<sid>`，TTL **1800s 滚动刷新**。详细决策见 DEV_NOTE.md「Session 与 Redis」节。
-- 鉴权统一通过 `@cloud/auth` 的 `getSession()` / `requireSession()`：
-  - `getSession()` 用 React `cache()` 在请求内去重，只命中一次 Redis（同时只 touch 一次 TTL）
-  - `requireSession()` 检测到无效 session → redirect 到 `/api/auth/logout` → 该 Route Handler 清 cookie 再回 `/login`，保证 cookie 一致
-  - 页面 / Server Action / Route Handler 都调同一个入口
-- 路由组：`apps/admin/app/(public)/...` 不需要 session（含登录页、公钥、logout）；`(authed)/...` 由 `layout.tsx` 调 `requireSession()` 兜底鉴权。
-- E2E 验证：`pnpm --filter admin e2e`（首次需 `pnpm --filter admin e2e:install` 装 chromium）。详见 `apps/admin/e2e/`。
-
-## Getting Started
-
-Install dependencies:
+## 启动当前仓库
 
 ```bash
 pnpm install
-```
-
-Create local env files. The repository uses a two-tier layout:
-
-- Root `.env` — Docker infrastructure + shared backend connections (DB / Redis). Read by `docker-compose.yml`, by `packages/db/prisma.config.ts` for all `pnpm db:*` commands, and pre-loaded by each app's `next.config.ts`.
-- `apps/<app>/.env` — per-app deployment values (public app name). Auto-loaded by Next.js from the app cwd, so values from per-app files override root values when both define the same key.
-
-```bash
 cp .env.example .env
-cp apps/partner/.env.example apps/partner/.env
-cp apps/admin/.env.example apps/admin/.env
-cp apps/merchant/.env.example apps/merchant/.env
-```
-
-If you only run one app, you can skip the other apps' files for now — Next.js will fail fast with a Zod error pointing at the missing variable.
-
-Create and start PostgreSQL and Redis with values from the root `.env`:
-
-```bash
-docker compose --env-file .env create
-docker compose --env-file .env start
-```
-
-Or create and start them in one command:
-
-```bash
-docker compose --env-file .env up -d
-```
-
-`DATABASE_URL` must match the PostgreSQL values used by Docker Compose:
-
-```env
-POSTGRES_DB=cloud_frontend
-POSTGRES_USER=cloud
-POSTGRES_PASSWORD=cloud_dev_password
-POSTGRES_PORT=5433
-DATABASE_URL=postgresql://cloud:cloud_dev_password@localhost:5433/cloud_frontend?schema=public
-```
-
-These defaults are also defined in `docker-compose.yml` with Docker Compose interpolation syntax, so `docker compose up -d` works on both Windows and Linux even before you customize `.env`.
-
-PostgreSQL only applies `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` when the data volume is initialized for the first time. If you changed these values after the container was already created, either update `DATABASE_URL` to match the existing database credentials, or recreate the local database volume:
-
-```bash
-docker compose --env-file .env down -v
-docker compose --env-file .env up -d
-```
-
-`down -v` deletes the local PostgreSQL and Redis data volumes.
-
-Apply migrations and prepare seed data:
-
-```bash
-pnpm db:migrate   # prisma migrate dev — applies migrations and regenerates the client
-pnpm db:seed      # writes platform roles, permissions, and bootstrap accounts
-```
-
-The Prisma client is auto-generated by the `@cloud/db` postinstall hook on every `pnpm install`, and again as the first step of `pnpm build`. Generated code lives in `packages/db/generated/client/` and is gitignored — see `DEV_NOTE.md` for the generator setup, multi-developer workflow, and troubleshooting. `packages/db/prisma.config.ts` loads the repository root `.env`, so all `pnpm db:*` scripts share the same `DATABASE_URL` as the Next.js apps.
-
-Seed creates three bootstrap accounts，密码均为 `ChangeMe!123`（argon2id 哈希后入库）：
-
-| Account | Email                | Password       |
-| ------- | -------------------- | -------------- |
-| `admin` | `admin@cloud.local`  | `ChangeMe!123` |
-| `isv`   | `isv@cloud.local`    | `ChangeMe!123` |
-| `iso`   | `iso@cloud.local`    | `ChangeMe!123` |
-
-These accounts are for local bootstrap only. Change the passwords before using a shared or production environment. 改默认密码：按 `packages/db/prisma/seed.ts` 顶部注释里的 one-liner 重算 argon2id hash，粘到 `DEFAULT_PASSWORD_HASH` 常量，再跑 `pnpm db:seed`。
-
-Start the partner app:
-
-```bash
+cp apps/web/.env.example apps/web/.env
+docker compose up -d
+pnpm db:setup
 pnpm dev
 ```
 
-Open:
+打开 http://localhost:3000。
 
-- Partner: http://localhost:3000
-- Merchant: `pnpm dev:merchant`, then http://localhost:3001
-- Admin: `pnpm dev:admin`, then http://localhost:3002
+默认种子账号：
 
-## Useful Commands
+- 账号：`admin`
+- 密码：`ChangeMe!123`
+
+## 当前工作区
+
+- `apps/web`
+- `packages/config`
+- `packages/db`
+- `packages/permissions`
+- `packages/request`
+- `packages/security`
+- `packages/ui`
+
+## 初始化新项目
+
+```bash
+pnpm init:project
+```
+
+也可以直接传参：
+
+```bash
+node scripts/init-project.mjs ^
+  --name "Acme Portal" ^
+  --app web ^
+  --port 3000 ^
+  --features redis ^
+  --target ./generated/acme-portal
+```
+
+默认会生成一套后台基线项目，内含：
+
+- 单个 Next.js App Router 应用
+- 登录页和后台 layout
+- Prisma/PostgreSQL 数据层
+- 用户 / 角色 / 菜单基础模型
+
+当前可选叠加模块只有：
+
+- `redis`
+- `i18n`
+- `storage`
+
+## 生成后的启动方式
+
+```bash
+cd generated/<project-slug>
+pnpm install
+cp .env.example .env
+cp apps/<app-name>/.env.example apps/<app-name>/.env
+docker compose up -d
+pnpm db:setup
+pnpm dev
+```
+
+## 仓库结构
+
+```txt
+apps/
+  web/
+packages/
+  config/
+  db/
+  request/
+  security/
+  ui/
+templates/
+  base/
+  features/
+scripts/
+  init-project.mjs
+  prisma.mjs
+```
+
+## 开发指南
+
+### 页面放在哪里
+
+- 登录前页面放在 `apps/web/app/(public)`
+- 登录后的后台页面放在 `apps/web/app/(portal)`
+- API 路由放在 `apps/web/app/api`
+- 共享服务端逻辑优先放在 `apps/web/lib` 或 `packages/*`
+
+当前基线已经把后台壳子接在 `app/(portal)` 上，所以大多数业务页面都应该加在这个分组里。
+
+### 怎么加一个后台页面
+
+1. 在 `apps/web/app/(portal)` 下创建新目录，例如 `reports/page.tsx`
+2. 默认导出一个 App Router 页面组件
+3. 页面里如果需要登录态，直接调用 `requireSession()`
+
+示例：
+
+```tsx
+import { requireSession } from "../../lib/auth";
+
+export default async function ReportsPage() {
+  const session = await requireSession();
+
+  return <div>Hello, {session.name}</div>;
+}
+```
+
+### 怎么加菜单
+
+当前基线的菜单来自数据库里的 `menu` 表，不是写死在前端代码里。
+
+相关模型在：
+- `packages/db/prisma/schema.prisma`
+- `packages/db/prisma/seed.ts`
+
+当前 `Menu` 结构：
+- `key`
+- `label`
+- `path`
+- `icon`
+- `sortOrder`
+- `roleId`
+
+最直接的做法有两种：
+
+1. 修改 seed
+适合默认基线菜单、初始化项目时就要存在的菜单。
+
+```ts
+await prisma.menu.upsert({
+  where: { key: "reports" },
+  update: {
+    label: "Reports",
+    path: "/reports",
+    icon: "layout-dashboard",
+    sortOrder: 2,
+    roleId: adminRole.id,
+  },
+  create: {
+    key: "reports",
+    label: "Reports",
+    path: "/reports",
+    icon: "layout-dashboard",
+    sortOrder: 2,
+    roleId: adminRole.id,
+  },
+});
+```
+
+改完后执行：
+
+```bash
+pnpm db:seed
+```
+
+2. 用 Prisma Studio 直接改表
+适合本地调试或临时验证。
+
+```bash
+pnpm db:studio
+```
+
+要让菜单真正可访问，还需要确保：
+- `path` 对应的页面文件已经存在
+- 该菜单挂在当前用户角色对应的 `roleId` 下
+
+### 怎么做鉴权
+
+当前基线内置的是“登录态鉴权”，核心文件是 `apps/web/lib/auth.ts`。
+
+最常用的两个入口：
+
+- `getSession()`
+  - 获取当前会话
+  - 未登录时返回 `null`
+- `requireSession()`
+  - 要求必须登录
+  - 未登录时会跳转到登出路由并清理状态
+
+页面鉴权示例：
+
+```tsx
+import { requireSession } from "../../lib/auth";
+
+export default async function ProtectedPage() {
+  const session = await requireSession();
+  return <div>{session.account}</div>;
+}
+```
+
+API 鉴权示例：
+
+```ts
+import { requireSession } from "../../../lib/auth";
+import { successResponse, unauthorizedResponse } from "@cloud/request/server";
+
+export async function GET() {
+  const session = await requireSession().catch(() => null);
+  if (!session) {
+    return unauthorizedResponse();
+  }
+
+  return successResponse({ account: session.account });
+}
+```
+
+### 怎么做权限判断
+
+当前仓库已经带上 `packages/permissions`，但注意：
+
+- 现在默认基线里只有 `user / role / menu`
+- 还没有独立的 permission 表
+- 所以 `@cloud/permissions` 目前是一个可复用的权限判断工具，不是完整权限系统
+
+核心类：
+
+```ts
+import { PermissionChecker } from "@cloud/permissions";
+```
+
+用法示例：
+
+```ts
+const checker = new PermissionChecker({
+  roles: ["admin"],
+  permissions: ["admin.report.read", "admin.report.export"],
+});
+
+checker.has("admin.report.read");
+checker.can("report", "read");
+checker.can("report", ["read", "export"]);
+```
+
+如果你要做真正的细粒度鉴权，建议下一步补：
+
+- permission 表
+- role 与 permission 的关系
+- 登录态中的 permission 聚合
+
+然后再在页面或 API 中统一调用 `PermissionChecker`。
+
+### 怎么请求接口
+
+统一请求封装在 `packages/request`。
+
+客户端请求：
+
+```ts
+import { request } from "@cloud/request/client";
+
+const result = await request.get<{ items: string[] }>("/api/health");
+console.log(result.data);
+```
+
+带 query：
+
+```ts
+await request.get("/api/reports", {
+  query: { page: 1, limit: 20 },
+});
+```
+
+POST 示例：
+
+```ts
+await request.post("/api/reports", {
+  name: "Weekly Report",
+});
+```
+
+服务端返回建议统一走 `@cloud/request/server`：
+
+```ts
+import {
+  badRequestResponse,
+  createdResponse,
+  successResponse,
+} from "@cloud/request/server";
+
+export async function GET() {
+  return successResponse({ ok: true });
+}
+
+export async function POST() {
+  return createdResponse({ id: "new-id" });
+}
+```
+
+可用的响应辅助包括：
+
+- `successResponse`
+- `createdResponse`
+- `noContentResponse`
+- `badRequestResponse`
+- `unauthorizedResponse`
+- `forbiddenResponse`
+- `notFoundResponse`
+
+### 一个最常见的开发流程
+
+1. 在 `app/(portal)` 下加页面
+2. 在 `packages/db/prisma/seed.ts` 或数据库里加菜单
+3. 用 `requireSession()` 先把登录态保护起来
+4. 用 `app/api/*` 新增接口
+5. 前端用 `@cloud/request/client` 调接口
+6. 如果需要更细权限，再把 `@cloud/permissions` 接进来
+
+## 常用命令
 
 ```bash
 pnpm dev
-pnpm dev:partner
-pnpm dev:merchant
-pnpm dev:admin
-
+pnpm db:setup
+pnpm db:studio
 pnpm lint
-pnpm format:check
-pnpm test
-
-pnpm --filter partner build
-pnpm --filter merchant build
-pnpm --filter admin build
-pnpm build
-```
-
-## Validation Status
-
-The monorepo migration has been verified with:
-
-```bash
-pnpm test
-pnpm lint
-pnpm format:check
-pnpm --filter partner build
-pnpm --filter merchant build
-pnpm --filter admin build
+pnpm exec tsc --noEmit
+pnpm --filter web build
+pnpm test:scaffold
 ```

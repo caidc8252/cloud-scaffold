@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Separator as SeparatorPrimitive } from "@base-ui/react/separator"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 interface SeparatorProps extends SeparatorPrimitive.Props {
   label?: React.ReactNode
@@ -40,3 +40,5 @@ function Separator({
 }
 
 export { Separator }
+
+

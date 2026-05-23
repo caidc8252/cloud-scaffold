@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 // Profile picture with image fallback to initials. size: 'sm'|'md'|'lg'|'xl' on the Avatar root.
 function Avatar({
@@ -66,3 +66,5 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export { Avatar, AvatarImage, AvatarFallback, AvatarGroup }
+
+

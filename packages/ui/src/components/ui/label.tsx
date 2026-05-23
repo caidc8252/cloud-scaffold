@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 // Accessible form field label. Link to an input via htmlFor to enable click-to-focus.
 function Label({ className, ...props }: React.ComponentProps<"label">) {
@@ -17,3 +17,5 @@ function Label({ className, ...props }: React.ComponentProps<"label">) {
 }
 
 export { Label }
+
+

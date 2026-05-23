@@ -2,7 +2,7 @@ import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 import { MoreHorizontalIcon } from "lucide-react"
 
 // Horizontal navigation trail showing the current page's location hierarchy. BreadcrumbPage marks the current (non-link) crumb.
@@ -124,3 +124,5 @@ export {
   BreadcrumbSeparator,
   BreadcrumbEllipsis,
 }
+
+

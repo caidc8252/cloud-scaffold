@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as ResizablePrimitive from "react-resizable-panels"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 // Draggable split-pane layout. ResizablePanel items separated by a draggable ResizableHandle.
 function ResizablePanelGroup({
@@ -48,3 +48,5 @@ function ResizableHandle({
 }
 
 export { ResizableHandle, ResizablePanel, ResizablePanelGroup }
+
+

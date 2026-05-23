@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 const alertVariants = cva(
   "relative w-full rounded-lg border py-3 px-4 has-[>svg]:grid has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:size-3.5 *:[svg]:mt-0.5 *:[svg]:shrink-0",
@@ -74,3 +74,5 @@ function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export { Alert, AlertTitle, AlertDescription, AlertAction }
+
+

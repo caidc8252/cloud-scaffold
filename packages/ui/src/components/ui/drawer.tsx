@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 // Bottom-sheet style drawer powered by vaul. Use for mobile-friendly side panels and overlays.
 function Drawer({
@@ -133,3 +133,5 @@ export {
   DrawerTitle,
   DrawerDescription,
 }
+
+

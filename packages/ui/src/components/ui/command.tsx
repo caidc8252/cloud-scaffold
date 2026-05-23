@@ -4,11 +4,11 @@ import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 import {
   InputGroup,
   InputGroupAddon,
-} from "@/components/ui/input-group"
+} from "./input-group"
 import { SearchIcon, CheckIcon } from "lucide-react"
 
 // Keyboard-driven command palette with fuzzy search. CommandInput filters CommandItems by their text content.
@@ -187,3 +187,5 @@ export {
   CommandShortcut,
   CommandSeparator,
 }
+
+

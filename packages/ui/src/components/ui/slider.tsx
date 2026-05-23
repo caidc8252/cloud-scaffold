@@ -1,6 +1,6 @@
 import { Slider as SliderPrimitive } from "@base-ui/react/slider"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 // Draggable track-and-thumb input for selecting a numeric value or range.
 function Slider({
@@ -51,3 +51,5 @@ function Slider({
 }
 
 export { Slider }
+
+

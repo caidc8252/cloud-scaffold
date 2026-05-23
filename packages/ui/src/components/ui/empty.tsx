@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 interface EmptyProps extends React.ComponentProps<"div"> {
   icon?: React.ReactNode
@@ -42,3 +42,5 @@ function Empty({
 }
 
 export { Empty, type EmptyProps }
+
+
