@@ -43,47 +43,15 @@ pnpm dev
 - `packages/security`
 - `packages/ui`
 
-## 初始化新项目
+## 开发方式
 
-```bash
-pnpm init:project
-```
+当前仓库不再提供 `init:project` 生成新项目。
 
-也可以直接传参：
+推荐工作方式：
 
-```bash
-node scripts/init-project.mjs ^
-  --name "Acme Portal" ^
-  --app web ^
-  --port 3000 ^
-  --features redis ^
-  --target ./generated/acme-portal
-```
-
-默认会生成一套后台基线项目，内含：
-
-- 单个 Next.js App Router 应用
-- 登录页和后台 layout
-- Prisma/PostgreSQL 数据层
-- 用户 / 角色 / 菜单基础模型
-
-当前可选叠加模块只有：
-
-- `redis`
-- `i18n`
-- `storage`
-
-## 生成后的启动方式
-
-```bash
-cd generated/<project-slug>
-pnpm install
-cp .env.example .env
-cp apps/<app-name>/.env.example apps/<app-name>/.env
-docker compose up -d
-pnpm db:setup
-pnpm dev
-```
+- 直接在 `apps/web` 下开发业务页面和路由
+- 直接在 `packages/*` 下维护共享能力
+- 把当前仓库本体当作你的项目基线
 
 ## 仓库结构
 
@@ -93,14 +61,11 @@ apps/
 packages/
   config/
   db/
+  permissions/
   request/
   security/
   ui/
-templates/
-  base/
-  features/
 scripts/
-  init-project.mjs
   prisma.mjs
 ```
 
@@ -342,5 +307,5 @@ pnpm db:studio
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm --filter web build
-pnpm test:scaffold
+pnpm test
 ```

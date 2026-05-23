@@ -6,10 +6,12 @@
 
 - 这个仓库本身是脚手架源码仓，不再承载旧业务应用。
 - 当前默认基线不是“极简空壳”，而是一套可直接登录的后台骨架。
+- 当前开发方式是直接在仓库本体上迭代，不再提供 `init:project` 生成新项目。
 - 当前默认工作区：
   - `apps/web`
   - `packages/config`
   - `packages/db`
+  - `packages/permissions`
   - `packages/request`
   - `packages/security`
   - `packages/ui`
@@ -28,16 +30,6 @@
   - PostgreSQL
   - argon2
 
-## 模板约束
-
-- `apps/web` 和 `templates/base` 必须保持同一条产品方向。
-- `templates/base` 代表“生成出来的新项目默认长什么样”。
-- `templates/features/*` 只保留真正可选的增强模块。
-- 当前可选模块只有：
-  - `redis`
-  - `i18n`
-  - `storage`
-
 ## 环境与脚本约束
 
 - 根 `.env` 负责数据库和认证密钥。
@@ -55,14 +47,14 @@
 
 ## 验证基线
 
-每次调整基线、模板或生成器，至少跑：
+每次调整基线，至少跑：
 
 ```bash
 pnpm db:generate
-pnpm test:scaffold
+pnpm test
 pnpm exec tsc --noEmit
 pnpm lint
 pnpm --filter web build
 ```
 
-如果本地没有起 PostgreSQL，可以先不跑 `pnpm db:push` / `pnpm db:seed`，但 README 和模板里的启动链路必须保持完整。
+如果本地没有起 PostgreSQL，可以先不跑 `pnpm db:push` / `pnpm db:seed`，但 README 里的启动链路必须保持完整。

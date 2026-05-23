@@ -11,8 +11,8 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "jsdom",
+    environment: "node",
     globals: true,
-    include: ["packages/config/test/init-project.test.ts"],
+    passWithNoTests: true,
   },
 });
